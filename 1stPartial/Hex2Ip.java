@@ -38,6 +38,25 @@ public class Hex2Ip{
             return;
         }
 
+        // Validate the complete hexadecimal string BEFORE converting it.
+        // This prevents printing partial results if an invalid
+        // character appears later in the input.
+        for(int i = 0; i < hexas.length; i++)
+        {
+            int digit = Character.digit(hexas[i], 16);
+
+            // Character.digit() returns -1 when the character
+            // is not a valid hexadecimal digit.
+            //
+            // Example:
+            // G -> -1
+            if(digit == -1)
+            {
+                System.out.println("Error");
+                return;
+            }
+        }
+
         for(int i = 0; i < hexas.length; i += 2)
         {
             // Let's say we have FF, starts at 0.
@@ -55,60 +74,18 @@ public class Hex2Ip{
             // And then:
             // result += 15;
             //
-            // So that sum is:
             // 240 + 15 = 255.
             //
-            // In resume, for each pair:
+            // In resume:
             // value = X X 16 + Y
 
-            // Interpret the first character as a hexadecimal digit.
-            // Example:
-            // '0' -> 0
-            // '5' -> 5
-            // 'A' -> 10
-            // 'F' -> 15
-            int first = Character.digit(hexas[i], 16);
-
-            // Character.digit() returns -1 when the character
-            // is not a valid hexadecimal digit.
-            //
-            // Example:
-            // Character.digit('G', 16) -> -1
-            if(first == -1)
-            {
-                System.out.println("Error");
-                return;
-            }
-
-            // The first hexadecimal digit represents the
-            // high part of the byte, so we multiply by 16.
             result *= 16;
-            result += first;
+            result += Character.digit(hexas[i], 16);
 
-            // Get the second hexadecimal digit.
-            int second = Character.digit(hexas[i + 1], 16);
-
-            // Validate the second hexadecimal character.
-            if(second == -1)
-            {
-                System.out.println("Error");
-                return;
-            }
-
-            // Add the second hexadecimal digit.
             result *= 16;
-            result += second;
+            result += Character.digit(hexas[i + 1], 16);
 
-            // The pair is now converted from hexadecimal
-            // to its decimal value.
-            //
-            // Example:
-            // FF -> 255
-            // 0A -> 10
             System.out.print(result + ".");
-
-            // Reset result so the next hexadecimal pair
-            // can be converted independently.
             result = 0;
         }
 
