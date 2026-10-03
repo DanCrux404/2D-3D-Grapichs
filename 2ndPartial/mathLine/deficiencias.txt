@@ -1,0 +1,12 @@
+1. Eficiencia: No es muy eficiente para encontrar los pixeles correspondientes al trazo de la línea, ya que evalúa la ecuación completa en cada iteración.
+
+2. Costo computacional: Cada paso dentro del bucle requiere operaciones que son lentas para el procesador: una multiplicación de punto flotante, una suma y una función de redondeo. 
+
+3. Huecos en líneas empinadas (El problema del bucle): Si la pendiente (m) es mayor a 1 o menor a -1 (es decir, la línea es más alta que ancha), avanzar de 1 en 1 en el eje X genera saltos grandes en el eje Y. Esto hace que la línea no se vea continua, sino punteada o con huecos. 
+
+4. Falla en líneas verticales (División por cero): El algoritmo matemático puro no puede dibujar líneas completamente verticales. Al ser x1 igual a x0, el cálculo de la pendiente (m = dy / dx) provoca una división por cero, lo que bloquea el programa.
+
+5. Dependencia del eje de iteración: Necesitamos un loop (bucle), pero la deficiencia es que el bucle no es "universal". Para que no haya huecos, el bucle tendría que iterar sobre X cuando la línea es horizontal, pero tendría que iterar sobre Y (calculando x = (y - b) / m) cuando la línea es vertical, lo que requiere programar dos algoritmos distintos.
+
+6. Uso de punto flotante vs. Enteros: A diferencia de algoritmos profesionales, este método usa variables tipo "double" (decimales). Los cálculos con números enteros son muchísimo más rápidos y exactos a nivel de pixeles en una pantalla.
+

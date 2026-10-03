@@ -1,0 +1,24 @@
+1.- Eliminación de la multiplicación en el bucle (Método Incremental):
+En el código anterior, calculábamos y = (m * x) + b en cada paso.
+La multiplicación es una operación costosa.
+Ahora, como sabemos que x aumenta de 1 en 1, simplemente
+le sumamos la pendiente a y en cada iteración (y += m).
+Matemáticamente es el mismo principio, pero computacionalmente es mucho más rápido.
+
+2.- Solución a los huecos en líneas empinadas: 
+Se agregó una validación if (dx >= dy). Si la línea es más alta que ancha,
+el algoritmo ahora itera inteligentemente sobre el eje y en lugar del eje x.
+Esto asegura que nunca haya píxeles vacíos (huecos) en el trazo.
+
+3.- Manejo natural de la división por cero:
+Al iterar sobre y cuando la línea es más vertical,
+evitamos calcular m = dy / dx cuando dx es cero.
+En su lugar calcula invM = dx / dy, por lo que las líneas totalmente
+verticales se dibujan perfectamente sin necesidad de añadir un caso especial
+if (x0 == x1) { ... return; } que detenga el flujo.
+
+Optimización del redondeo (Math.round): Llamar a la función
+de librería Math.round(y) tiene un ligero costo de rendimiento.
+Se reemplazó por la expresión (int)(y + 0.5). A nivel de procesador,
+hacer un cast (conversión) a entero después de sumar 0.5 logra el mismo
+redondeo para números positivos pero de forma nativa y muchísimo más veloz.
