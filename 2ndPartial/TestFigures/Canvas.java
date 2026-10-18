@@ -366,6 +366,7 @@ public class Canvas extends JPanel {
         );
         */
 
+        /*
         Rectangle.draw(buffer, 50, 50, 150, 120, Color.BLACK);
 
         Rectangle.drawTransformed(
@@ -378,6 +379,38 @@ public class Canvas extends JPanel {
 
         Rectangle.drawTransformed(
             buffer, 50, 50, 150, 120, Color.GREEN, 3
+        );
+        */
+
+        // Original figures
+        Circle.midpoint(buffer, 150, 150, 40, Color.BLACK);
+        Ellipse.midpoint(buffer, 350, 150, 60, 30, Color.BLACK);
+
+        // Translations
+        Circle.drawTransformed(
+            buffer, 150, 150, 40, 1, Color.RED
+        );
+
+        Ellipse.drawTransformed(
+            buffer, 350, 150, 60, 30, 1, Color.RED
+        );
+
+        // Rotations of the center around the origin
+        Circle.drawTransformed(
+            buffer, 150, 150, 40, 2, Color.BLUE
+        );
+
+        Ellipse.drawTransformed(
+            buffer, 350, 150, 60, 30, 2, Color.BLUE
+        );
+
+        // Scaling
+        Circle.drawTransformed(
+            buffer, 150, 150, 40, 3, Color.GREEN
+        );
+
+        Ellipse.drawTransformed(
+            buffer, 350, 150, 60, 30, 3, Color.GREEN
         );
     }
 

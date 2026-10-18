@@ -586,5 +586,71 @@ public class Circle {
 
         return vertices;
     }
+
+    /**
+    * Draws a transformed circle using the midpoint algorithm.
+    *
+    * Transformation types:
+    * 1 = translation
+    * 2 = rotation around the origin
+    * 3 = uniform scaling around the origin
+    *
+    * @param buffer the image buffer
+    * @param xc the original center x-coordinate
+    * @param yc the original center y-coordinate
+    * @param radius the original radius
+    * @param transformation the transformation type
+    * @param color the circle color
+    */
+    public static void drawTransformed(
+            BufferedImage buffer,
+            int xc, int yc, int radius,
+            int transformation,
+            Color color) {
+
+        double newX = xc;
+        double newY = yc;
+        double newRadius = radius;
+
+        switch (transformation) {
+            case 1:
+                newX += 80;
+                newY += 40;
+            break;
+
+            case 2:
+                double angle = Math.toRadians(30);
+
+                double rotatedX =
+                    xc * Math.cos(angle) - yc * Math.sin(angle);
+
+                double rotatedY =
+                    xc * Math.sin(angle) + yc * Math.cos(angle);
+
+                newX = rotatedX;
+                newY = rotatedY;
+            break;
+
+            case 3:
+                newX = xc * 1.5;
+                newY = yc * 1.5;
+                newRadius = radius * 1.5;
+            break;
+
+            default:
+                throw new IllegalArgumentException(
+                    "Unknown transformation type."
+                );
+        }
+
+        Circle.midpoint(
+            buffer,
+            (int) Math.round(newX),
+            (int) Math.round(newY),
+            (int) Math.round(newRadius),
+            color
+        );
+    }
+
 }
 

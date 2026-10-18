@@ -158,5 +158,75 @@ public class Ellipse {
 
         return vertices;
     }
+
+    /**
+    * Draws a translated or scaled ellipse using the midpoint algorithm.
+    *
+    * Transformation types:
+    * 1 = translation
+    * 2 = rotation of the center around the origin
+    * 3 = uniform scaling around the origin
+    *
+    * Note: Type 2 rotates the center only. The ellipse itself
+    * remains aligned with the coordinate axes.
+    *
+    * @param buffer the image buffer
+    * @param xc the original center x-coordinate
+    * @param yc the original center y-coordinate
+    * @param radiusX the original horizontal radius
+    * @param radiusY the original vertical radius
+    * @param transformation the transformation type
+    * @param color the ellipse color
+    */
+    public static void drawTransformed(
+            BufferedImage buffer,
+            int xc, int yc, int radiusX, int radiusY,
+            int transformation,
+            Color color) {
+
+        double newX = xc;
+        double newY = yc;
+        double newRadiusX = radiusX;
+        double newRadiusY = radiusY;
+
+        switch (transformation) {
+            case 1:
+                newX += 80;
+                newY += 40;
+            break;
+
+            case 2:
+                double angle = Math.toRadians(30);
+
+                newX = xc * Math.cos(angle)
+                    - yc * Math.sin(angle);
+
+                newY = xc * Math.sin(angle)
+                    + yc * Math.cos(angle);
+            break;
+
+            case 3:
+                newX = xc * 1.5;
+                newY = yc * 1.5;
+                newRadiusX = radiusX * 1.5;
+                newRadiusY = radiusY * 1.5;
+            break;
+
+            default:
+                throw new IllegalArgumentException(
+                    "Unknown transformation type."
+                );
+        }
+
+        Ellipse.midpoint(
+            buffer,
+            (int) Math.round(newX),
+            (int) Math.round(newY),
+            (int) Math.round(newRadiusX),
+            (int) Math.round(newRadiusY),
+            color
+        );
+    }
+
 }
 
