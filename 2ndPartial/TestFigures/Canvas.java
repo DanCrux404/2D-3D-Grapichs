@@ -12,6 +12,8 @@ import engine.fill.FloodFill;
 import engine.clipping.CohenSutherland;
 import engine.clipping.PointClipping;
 import engine.clipping.ClipWindow;
+import engine.transform.Point2D;
+import engine.transform.Transform2D;
 
 public class Canvas extends JPanel {
 
@@ -292,27 +294,27 @@ public class Canvas extends JPanel {
 
         // Case AB: Partially visible.
         // Code 1 = 0001 (left), Code 2 = 1000 (top).
-        drawClippedLine(buffer, 80, 200, 250, 50,
+        Line.drawClippedLine(buffer, 80, 200, 250, 50,
             xmin, ymin, xmax, ymax, Color.RED);
 
         // Case CD: Completely visible.
         // Code 1 = 0000, Code 2 = 0000.
-        drawClippedLine(buffer, 200, 150, 400, 300,
+        Line.drawClippedLine(buffer, 200, 150, 400, 300,
             xmin, ymin, xmax, ymax, Color.GREEN);
 
         // Case EF: Partially visible.
         // Code 1 = 0100 (bottom), Code 2 = 0000 (inside).
-        drawClippedLine(buffer, 300, 420, 350, 250,
+        Line.drawClippedLine(buffer, 300, 420, 350, 250,
             xmin, ymin, xmax, ymax, Color.BLUE);
 
         // Case GH: Trivially invisible.
         // Code 1 = 0010 (right), Code 2 = 0010 (right).
-        drawClippedLine(buffer, 500, 150, 550, 300,
+        Line.drawClippedLine(buffer, 500, 150, 550, 300,
             xmin, ymin, xmax, ymax, Color.MAGENTA);
 
         // Case IJ: Invisible, but not trivially rejected.
         // Code 1 = 1000 (top), Code 2 = 0010 (right).
-        drawClippedLine(buffer, 250, 50, 500, 200,
+        Line.drawClippedLine(buffer, 250, 50, 500, 200,
             xmin, ymin, xmax, ymax, Color.ORANGE);
 
         // Draw the clipping window LAST to keep its border visible.
@@ -321,6 +323,7 @@ public class Canvas extends JPanel {
         );
         */
 
+        /*
         // Clipping window boundaries.
         int xmin = 150;
         int ymin = 100;
@@ -361,44 +364,22 @@ public class Canvas extends JPanel {
         Rectangle.draw(
             buffer, xmin, ymin, xmax, ymax, Color.BLACK
         );
+        */
 
-    }
+        Rectangle.draw(buffer, 50, 50, 150, 120, Color.BLACK);
 
-    /**
-    * Clips a line and draws its visible segment.
-    *
-    * @param buffer the image buffer
-    * @param x1 the first endpoint x-coordinate
-    * @param y1 the first endpoint y-coordinate
-    * @param x2 the second endpoint x-coordinate
-    * @param y2 the second endpoint y-coordinate
-    * @param xmin the clipping window left boundary
-    * @param ymin the clipping window top boundary
-    * @param xmax the clipping window right boundary
-    * @param ymax the clipping window bottom boundary
-    * @param color the line color
-    */
-    private static void drawClippedLine(
-            BufferedImage buffer,
-            int x1, int y1, int x2, int y2,
-            int xmin, int ymin, int xmax, int ymax,
-            Color color) {
-
-        int[] clippedLine = CohenSutherland.clip(
-            x1, y1, x2, y2,
-            xmin, ymin, xmax, ymax
+        Rectangle.drawTransformed(
+            buffer, 50, 50, 150, 120, Color.RED, 1
         );
 
-        if (clippedLine != null) {
-            Line.bresenham(
-                buffer,
-                clippedLine[0], clippedLine[1],
-                    clippedLine[2], clippedLine[3],
-                    color
-            );
-        }
-    }
+        Rectangle.drawTransformed(
+            buffer, 50, 50, 150, 120, Color.BLUE, 2
+        );
 
+        Rectangle.drawTransformed(
+            buffer, 50, 50, 150, 120, Color.GREEN, 3
+        );
+    }
 
     @Override
     protected void paintComponent(Graphics g) {

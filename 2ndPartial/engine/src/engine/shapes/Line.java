@@ -3,6 +3,7 @@ package engine.shapes;
 import engine.core.Pixel;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import engine.clipping.CohenSutherland;
 
 public class Line{
 
@@ -355,6 +356,41 @@ public class Line{
                 error += dx;
                 y0 += sy;
             }
+        }
+    }
+
+    /**
+    * Clips a line and draws its visible segment.
+    *
+    * @param buffer the image buffer
+    * @param x1 the first endpoint x-coordinate
+    * @param y1 the first endpoint y-coordinate
+    * @param x2 the second endpoint x-coordinate
+    * @param y2 the second endpoint y-coordinate
+    * @param xmin the clipping window left boundary
+    * @param ymin the clipping window top boundary
+    * @param xmax the clipping window right boundary
+    * @param ymax the clipping window bottom boundary
+    * @param color the line color
+    */
+    public static void drawClipped(
+            BufferedImage buffer,
+            int x1, int y1, int x2, int y2,
+            int xmin, int ymin, int xmax, int ymax,
+            Color color) {
+
+        int[] clippedLine = CohenSutherland.clip(
+            x1, y1, x2, y2,
+            xmin, ymin, xmax, ymax
+        );
+
+        if (clippedLine != null) {
+            Line.bresenham(
+                buffer,
+                clippedLine[0], clippedLine[1],
+                clippedLine[2], clippedLine[3],
+                color
+            );
         }
     }
 }
