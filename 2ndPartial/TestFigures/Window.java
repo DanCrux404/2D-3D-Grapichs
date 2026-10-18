@@ -5,7 +5,7 @@ import javax.swing.JFrame;
 public class Window {
 
     public Window() {
-        JFrame frame = new JFrame("DDA Line");
+        JFrame frame = new JFrame("Canvas Test");
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());

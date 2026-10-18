@@ -118,5 +118,45 @@ public class Ellipse {
         Pixel.put(buffer, xc + x, yc + y, color);
         Pixel.put(buffer, xc - x, yc + y, color);
     }
+
+    /**
+    * Returns polygon vertices approximating an ellipse.
+    *
+    * @param xc the x-coordinate of the center
+    * @param yc the y-coordinate of the center
+    * @param radiusX the horizontal radius
+    * @param radiusY the vertical radius
+    * @param segments the number of vertices used for approximation
+    * @return the vertices in contour order
+    */
+    public static int[][] vertices(
+            int xc, int yc, int radiusX, int radiusY, int segments) {
+
+        if (radiusX < 0 || radiusY < 0) {
+            throw new IllegalArgumentException(
+                    "Ellipse radii cannot be negative.");
+        }
+
+        if (segments < 3) {
+            throw new IllegalArgumentException(
+                    "At least three segments are required.");
+        }
+
+        int[][] vertices = new int[segments][2];
+
+        for (int i = 0; i < segments; i++) {
+            // Calculate the angle of the current vertex.
+            double angle = 2.0 * Math.PI * i / segments;
+
+            // Calculate the point on the ellipse.
+            vertices[i][0] =
+                    xc + (int) Math.round(radiusX * Math.cos(angle));
+
+            vertices[i][1] =
+                    yc + (int) Math.round(radiusY * Math.sin(angle));
+        }
+
+        return vertices;
+    }
 }
 

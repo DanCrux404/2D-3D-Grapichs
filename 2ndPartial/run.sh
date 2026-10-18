@@ -24,8 +24,7 @@ echo "Compiling $PRACTICE..."
 
 # Compile the engine and the selected practice.
 javac -d "$BUILD_DIR" \
-    engine/src/engine/core/*.java \
-    engine/src/engine/shapes/*.java \
+    $(find engine/src -name "*.java") \
     "$PRACTICE"/*.java
 
 echo "Running $PRACTICE..."
