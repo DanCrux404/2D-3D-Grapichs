@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 set -e
@@ -30,4 +29,3 @@ javac -d "$BUILD_DIR" \
 echo "Running $PRACTICE..."
 
 java -cp "$BUILD_DIR" Main
-
