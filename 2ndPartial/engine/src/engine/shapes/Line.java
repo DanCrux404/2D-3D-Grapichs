@@ -1,37 +1,32 @@
 package engine.shapes;
 
+import engine.clipping.CohenSutherland;
 import engine.core.Pixel;
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import engine.clipping.CohenSutherland;
 
-public class Line{
+public class Line {
 
     /**
-    * Draws a line on the specified image buffer using the
-    * Digital Differential Analyzer (DDA) algorithm.
-    *
-    * <p>The algorithm calculates the horizontal and vertical
-    * increments based on the maximum distance between the
-    * starting and ending points. It then iteratively computes
-    * intermediate coordinates and rounds them to the nearest
-    * pixel position.</p>
-    *
-    * <p>If both endpoints are identical, a single pixel is drawn.
-    * Pixels outside the buffer boundaries are ignored.</p>
-    *
-    * @param buffer the image buffer where the line will be drawn
-    * @param x0     the x-coordinate of the starting point
-    * @param y0     the y-coordinate of the starting point
-    * @param x1     the x-coordinate of the ending point
-    * @param y1     the y-coordinate of the ending point
-    * @param color  the color used to draw the line
-    */
-    public static void dda(
-            BufferedImage buffer,
-            int x0, int y0,
-            int x1, int y1,
-            Color color) {
+     * Draws a line on the specified image buffer using the Digital Differential Analyzer (DDA)
+     * algorithm.
+     *
+     * <p>The algorithm calculates the horizontal and vertical increments based on the maximum
+     * distance between the starting and ending points. It then iteratively computes intermediate
+     * coordinates and rounds them to the nearest pixel position.
+     *
+     * <p>If both endpoints are identical, a single pixel is drawn. Pixels outside the buffer
+     * boundaries are ignored.
+     *
+     * @param buffer the image buffer where the line will be drawn
+     * @param x0 the x-coordinate of the starting point
+     * @param y0 the y-coordinate of the starting point
+     * @param x1 the x-coordinate of the ending point
+     * @param y1 the y-coordinate of the ending point
+     * @param color the color used to draw the line
+     */
+    public static void dda(BufferedImage buffer, int x0, int y0, int x1, int y1, Color color) {
 
         int dx = x1 - x0;
         int dy = y1 - y0;
@@ -50,55 +45,47 @@ public class Line{
         double x = x0;
         double y = y0;
 
-        Pixel.put(buffer, (int) Math.round(x),
-                           (int) Math.round(y), color);
+        Pixel.put(buffer, (int) Math.round(x), (int) Math.round(y), color);
 
         for (int k = 1; k <= steps; k++) {
             x += xinc;
             y += yinc;
 
-            Pixel.put(buffer, (int) Math.round(x),
-                               (int) Math.round(y), color);
+            Pixel.put(buffer, (int) Math.round(x), (int) Math.round(y), color);
         }
     }
-    
+
     /**
-     * Draws a line on the specified image buffer using
-     * Bresenham's line drawing algorithm.
+     * Draws a line on the specified image buffer using Bresenham's line drawing algorithm.
      *
-     * <p>The algorithm uses an integer decision parameter
-     * to determine which pixels best approximate the
-     * desired line, avoiding floating-point calculations.</p>
+     * <p>The algorithm uses an integer decision parameter to determine which pixels best
+     * approximate the desired line, avoiding floating-point calculations.
      *
-     * <p>This implementation supports all line directions
-     * and slopes, including horizontal, vertical, steep,
-     * negative-slope, and single-pixel lines.</p>
+     * <p>This implementation supports all line directions and slopes, including horizontal,
+     * vertical, steep, negative-slope, and single-pixel lines.
      *
-     * <p>Pixels outside the buffer boundaries are ignored.</p>
+     * <p>Pixels outside the buffer boundaries are ignored.
      *
      * @param buffer the image buffer where the line will be drawn
-     * @param x0     the x-coordinate of the starting point
-     * @param y0     the y-coordinate of the starting point
-     * @param x1     the x-coordinate of the ending point
-     * @param y1     the y-coordinate of the ending point
-     * @param color  the color used to draw the line
-    */
+     * @param x0 the x-coordinate of the starting point
+     * @param y0 the y-coordinate of the starting point
+     * @param x1 the x-coordinate of the ending point
+     * @param y1 the y-coordinate of the ending point
+     * @param color the color used to draw the line
+     */
     public static void bresenham(
-            BufferedImage buffer,
-            int x0, int y0,
-            int x1, int y1,
-            Color color) {
+            BufferedImage buffer, int x0, int y0, int x1, int y1, Color color) {
 
-        //Distances
+        // Distances
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
 
-        //Inicates if we move right or left
+        // Inicates if we move right or left
         int sx = (x0 < x1) ? 1 : -1;
-        //Indicates if we up or down
+        // Indicates if we up or down
         int sy = (y0 < y1) ? 1 : -1;
 
-        //Calculates error to decide next pixel
+        // Calculates error to decide next pixel
         int error = dx - dy;
 
         while (true) {
@@ -108,7 +95,7 @@ public class Line{
                 break;
             }
 
-            //Evaluates horizontal or vertical for each iteration
+            // Evaluates horizontal or vertical for each iteration
             int error2 = 2 * error;
 
             if (error2 > -dy) {
@@ -123,36 +110,27 @@ public class Line{
         }
     }
 
-    
     /**
-     * Draws a line on the specified image buffer using
-     * the Midpoint line drawing algorithm.
+     * Draws a line on the specified image buffer using the Midpoint line drawing algorithm.
      *
-     * <p>The algorithm selects the next pixel by evaluating
-     * a decision parameter derived from the midpoint between
-     * two candidate pixels. The major axis is processed
-     * incrementally, while the minor axis is adjusted when
-     * the decision parameter indicates that the line has
-     * crossed the midpoint.</p>
+     * <p>The algorithm selects the next pixel by evaluating a decision parameter derived from the
+     * midpoint between two candidate pixels. The major axis is processed incrementally, while the
+     * minor axis is adjusted when the decision parameter indicates that the line has crossed the
+     * midpoint.
      *
-     * <p>This implementation supports all line directions
-     * and slopes, including horizontal, vertical, steep,
-     * negative-slope, and single-pixel lines.</p>
+     * <p>This implementation supports all line directions and slopes, including horizontal,
+     * vertical, steep, negative-slope, and single-pixel lines.
      *
-     * <p>Pixels outside the buffer boundaries are ignored.</p>
+     * <p>Pixels outside the buffer boundaries are ignored.
      *
      * @param buffer the image buffer where the line will be drawn
-     * @param x0     the x-coordinate of the starting point
-     * @param y0     the y-coordinate of the starting point
-     * @param x1     the x-coordinate of the ending point
-     * @param y1     the y-coordinate of the ending point
-     * @param color  the color used to draw the line
-    */
-    public static void midpoint(
-            BufferedImage buffer,
-            int x0, int y0,
-            int x1, int y1,
-            Color color) {
+     * @param x0 the x-coordinate of the starting point
+     * @param y0 the y-coordinate of the starting point
+     * @param x1 the x-coordinate of the ending point
+     * @param y1 the y-coordinate of the ending point
+     * @param color the color used to draw the line
+     */
+    public static void midpoint(BufferedImage buffer, int x0, int y0, int x1, int y1, Color color) {
 
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
@@ -201,7 +179,7 @@ public class Line{
                 Pixel.put(buffer, x, y, color);
             }
 
-            //P update
+            // P update
             if (p >= 0) {
                 y += sy;
                 p -= dx;
@@ -211,40 +189,29 @@ public class Line{
         }
     }
 
-
-    /**
-    * Common line masks.
-    * '1' means draw the pixel; '0' means skip it.
-    */
+    /** Common line masks. '1' means draw the pixel; '0' means skip it. */
     public static final String DASHED = "1111000";
+
     public static final String DASH_DOT = "111100010";
 
     /**
-    * Draws a line using Bresenham's algorithm and a repeating mask.
-    *
-    * @param buffer the image buffer where the line will be drawn
-    * @param x0 the starting x-coordinate
-    * @param y0 the starting y-coordinate
-    * @param x1 the ending x-coordinate
-    * @param y1 the ending y-coordinate
-    * @param mask a non-empty string containing only '1' and '0'
-    * @param color the color used to draw the line
-    * @throws IllegalArgumentException if the mask is empty or invalid
-    */
+     * Draws a line using Bresenham's algorithm and a repeating mask.
+     *
+     * @param buffer the image buffer where the line will be drawn
+     * @param x0 the starting x-coordinate
+     * @param y0 the starting y-coordinate
+     * @param x1 the ending x-coordinate
+     * @param y1 the ending y-coordinate
+     * @param mask a non-empty string containing only '1' and '0'
+     * @param color the color used to draw the line
+     * @throws IllegalArgumentException if the mask is empty or invalid
+     */
     public static void drawMasked(
-            BufferedImage buffer,
-            int x0,
-            int y0,
-            int x1,
-            int y1,
-            String mask,
-            Color color) {
+            BufferedImage buffer, int x0, int y0, int x1, int y1, String mask, Color color) {
 
         // Make sure the mask contains a valid repeating pattern.
-        if (mask == null || mask.isEmpty()
-                || !mask.matches("[01]+")) {
-            throw new IllegalArgumentException(
-                    "Mask must contain only '1' and '0'.");
+        if (mask == null || mask.isEmpty() || !mask.matches("[01]+")) {
+            throw new IllegalArgumentException("Mask must contain only '1' and '0'.");
         }
 
         int dx = Math.abs(x1 - x0);
@@ -290,26 +257,21 @@ public class Line{
     }
 
     /**
-    * Draws a thick line using Bresenham's algorithm.
-    *
-    * @param buffer the image buffer where the line will be drawn
-    * @param x0 the starting x-coordinate
-    * @param y0 the starting y-coordinate
-    * @param x1 the ending x-coordinate
-    * @param y1 the ending y-coordinate
-    * @param thickness the line thickness in pixels
-    * @param color the color used to draw the line
-    */
+     * Draws a thick line using Bresenham's algorithm.
+     *
+     * @param buffer the image buffer where the line will be drawn
+     * @param x0 the starting x-coordinate
+     * @param y0 the starting y-coordinate
+     * @param x1 the ending x-coordinate
+     * @param y1 the ending y-coordinate
+     * @param thickness the line thickness in pixels
+     * @param color the color used to draw the line
+     */
     public static void thick(
-            BufferedImage buffer,
-            int x0, int y0,
-            int x1, int y1,
-            int thickness,
-            Color color) {
+            BufferedImage buffer, int x0, int y0, int x1, int y1, int thickness, Color color) {
 
         if (thickness < 1) {
-            throw new IllegalArgumentException(
-                    "Line thickness must be at least 1.");
+            throw new IllegalArgumentException("Line thickness must be at least 1.");
         }
 
         int dx = Math.abs(x1 - x0);
@@ -360,37 +322,36 @@ public class Line{
     }
 
     /**
-    * Clips a line and draws its visible segment.
-    *
-    * @param buffer the image buffer
-    * @param x1 the first endpoint x-coordinate
-    * @param y1 the first endpoint y-coordinate
-    * @param x2 the second endpoint x-coordinate
-    * @param y2 the second endpoint y-coordinate
-    * @param xmin the clipping window left boundary
-    * @param ymin the clipping window top boundary
-    * @param xmax the clipping window right boundary
-    * @param ymax the clipping window bottom boundary
-    * @param color the line color
-    */
+     * Clips a line and draws its visible segment.
+     *
+     * @param buffer the image buffer
+     * @param x1 the first endpoint x-coordinate
+     * @param y1 the first endpoint y-coordinate
+     * @param x2 the second endpoint x-coordinate
+     * @param y2 the second endpoint y-coordinate
+     * @param xmin the clipping window left boundary
+     * @param ymin the clipping window top boundary
+     * @param xmax the clipping window right boundary
+     * @param ymax the clipping window bottom boundary
+     * @param color the line color
+     */
     public static void drawClipped(
             BufferedImage buffer,
-            int x1, int y1, int x2, int y2,
-            int xmin, int ymin, int xmax, int ymax,
+            int x1,
+            int y1,
+            int x2,
+            int y2,
+            int xmin,
+            int ymin,
+            int xmax,
+            int ymax,
             Color color) {
 
-        int[] clippedLine = CohenSutherland.clip(
-            x1, y1, x2, y2,
-            xmin, ymin, xmax, ymax
-        );
+        int[] clippedLine = CohenSutherland.clip(x1, y1, x2, y2, xmin, ymin, xmax, ymax);
 
         if (clippedLine != null) {
             Line.bresenham(
-                buffer,
-                clippedLine[0], clippedLine[1],
-                clippedLine[2], clippedLine[3],
-                color
-            );
+                    buffer, clippedLine[0], clippedLine[1], clippedLine[2], clippedLine[3], color);
         }
     }
 }

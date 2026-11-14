@@ -1,16 +1,16 @@
 package project;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import project.animation.AnimationController;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.image.BufferedImage;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 
-import project.animation.AnimationController;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 public class Canvas {
 
@@ -25,11 +25,7 @@ public class Canvas {
     private final AnimationController animationController;
 
     public Canvas() {
-        buffer = new BufferedImage(
-            WIDTH,
-            HEIGHT,
-            BufferedImage.TYPE_INT_RGB
-        );
+        buffer = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
 
         scene = new CityScene(WIDTH, HEIGHT);
 
@@ -40,47 +36,39 @@ public class Canvas {
         scene.draw(buffer);
 
         // Connect the controller to the frame update method.
-        animationController = new AnimationController(
-            this::updateFrame
-        );
+        animationController = new AnimationController(this::updateFrame);
 
         // Stop the animation when the window is closing.
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                animationController.stop();
-            }
-        });
+        frame.addWindowListener(
+                new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        animationController.stop();
+                    }
+                });
     }
 
-    /**
-     * Initializes the graphical components.
-     */
+    /** Initializes the graphical components. */
     private void initComponents() {
-        panel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                g.drawImage(buffer, 0, 0, null);
-            }
-        };
+        panel =
+                new JPanel() {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        g.drawImage(buffer, 0, 0, null);
+                    }
+                };
 
-        panel.setPreferredSize(
-            new Dimension(WIDTH, HEIGHT)
-        );
+        panel.setPreferredSize(new Dimension(WIDTH, HEIGHT));
 
         panel.setDoubleBuffered(true);
     }
 
-    /**
-     * Configures the application window.
-     */
+    /** Configures the application window. */
     private void setFrame() {
         frame = new JFrame("City - 2D Graphics");
 
-        frame.setDefaultCloseOperation(
-            JFrame.EXIT_ON_CLOSE
-        );
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         frame.setResizable(false);
         frame.setContentPane(panel);
@@ -88,28 +76,24 @@ public class Canvas {
         frame.setLocationRelativeTo(null);
     }
 
-    /**
-     * Displays the application window and starts the animation.
-     */
+    /** Displays the application window and starts the animation. */
     public void show() {
         if (SwingUtilities.isEventDispatchThread()) {
             frame.setVisible(true);
             animationController.start();
         } else {
-            SwingUtilities.invokeLater(() -> {
-                frame.setVisible(true);
-                animationController.start();
-            });
+            SwingUtilities.invokeLater(
+                    () -> {
+                        frame.setVisible(true);
+                        animationController.start();
+                    });
         }
     }
 
-    /**
-     * Updates and redraws one animation frame.
-     */
+    /** Updates and redraws one animation frame. */
     private void updateFrame(long deltaMillis) {
         scene.update(deltaMillis);
         scene.draw(buffer);
         panel.repaint();
     }
 }
-

@@ -1,9 +1,6 @@
-
 package engine.clipping;
 
-/**
- * Represents a rectangular clipping window for point-based clipping.
- */
+/** Represents a rectangular clipping window for point-based clipping. */
 public class ClipWindow {
 
     private final int xmin;
@@ -21,9 +18,7 @@ public class ClipWindow {
      */
     public ClipWindow(int xmin, int ymin, int xmax, int ymax) {
         if (xmin > xmax || ymin > ymax) {
-            throw new IllegalArgumentException(
-                "Invalid clipping window boundaries."
-            );
+            throw new IllegalArgumentException("Invalid clipping window boundaries.");
         }
 
         this.xmin = xmin;
@@ -40,8 +35,6 @@ public class ClipWindow {
      * @return true if the point is inside or on the boundary
      */
     public boolean contains(int x, int y) {
-        return x >= xmin && x <= xmax
-            && y >= ymin && y <= ymax;
+        return x >= xmin && x <= xmax && y >= ymin && y <= ymax;
     }
 }
-

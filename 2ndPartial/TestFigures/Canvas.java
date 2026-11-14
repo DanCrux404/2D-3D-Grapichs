@@ -35,14 +35,14 @@ public class Canvas extends JPanel {
         g.dispose();
 
         // Draw a line using the DDA algorithm.
-        /*
+       /* 
         Line.dda(
             buffer,
             100, 100,
             650, 450,
             Color.RED
         );
-        */
+       */ 
 
         //Draw a line using Bresenham algorithm.
         /*
@@ -75,29 +75,29 @@ public class Canvas extends JPanel {
         */
 
         //Draws a circle with the math model
-        /*
+       /*
         Circle.draw(buffer, 400, 300, 150, Color.BLUE);
         Circle.draw(buffer, 200, 200, 80, Color.RED);
         Circle.draw(buffer, 600, 200, 80, Color.GREEN);
         */
 
         //Draws a circle with polar coordinates
-        //Circle.polar(buffer, 400, 300, 150, Color.BLUE);
+        Circle.polar(buffer, 400, 300, 50, Color.BLUE);
 
         //Draws a circle with the 8 side simmetry
         //Circle.symmetry8(buffer, 400, 300, 150, Color.MAGENTA);
         
         //Draws a circle using midpoint
-        //Circle.midpoint(buffer, 400, 300, 150, Color.GREEN);
+        Circle.midpoint(buffer, 400, 300, 100, Color.GREEN);
     
         //Draw a circile with bresenham
-        //Circle.bresenham(buffer, 400, 300, 150, Color.ORANGE);
+        Circle.bresenham(buffer, 400, 300, 150, Color.ORANGE);
         
         //Draw a ellipse
         //Ellipse.midpoint(buffer, 400, 300, 150, 80, Color.CYAN);
         
         //Draw some figures for practice 12
-        /*
+       /* 
             Line.midpoint(
             buffer,
             50, 50,
@@ -105,7 +105,7 @@ public class Canvas extends JPanel {
             Color.BLACK
         );
 
-        Line.midpoint(
+        Line.bresenham(
             buffer,
             180, 100,
             330, 100,
@@ -129,7 +129,7 @@ public class Canvas extends JPanel {
         Circle.bresenham(buffer, 130, 300, 10, Color.GREEN);
         Circle.bresenham(buffer, 130, 300, 30, Color.GREEN);
         Circle.bresenham(buffer, 130, 300, 50, Color.GREEN);
-        Circle.bresenham(buffer, 130, 300, 70, Color.GREEN);
+        Circle.midpoint(buffer, 130, 300, 70, Color.GREEN);
 
         Rectangle.draw(
             buffer,
@@ -152,7 +152,7 @@ public class Canvas extends JPanel {
         */
 
         // Dashed line: four pixels on, three off.
-        /*
+       /* 
         Line.drawMasked(
             buffer, 80, 160, 700, 160,
             Line.DASHED, Color.BLUE
@@ -169,9 +169,9 @@ public class Canvas extends JPanel {
             buffer, 80, 280, 700, 450,
             Line.DASHED, Color.MAGENTA
         );
-        */
+       */ 
 
-        /*
+       /* 
         // Thin line.
         Line.thick(buffer, 80, 100, 700, 100, 1, Color.BLACK);
 
@@ -186,7 +186,7 @@ public class Canvas extends JPanel {
 
         // Vertical line.
         Line.thick(buffer, 700, 100, 700, 500, 9, Color.ORANGE);
-        */
+       */ 
 
         /*
         // Continuous circle.
@@ -228,7 +228,7 @@ public class Canvas extends JPanel {
         Circle.thick(buffer, 320, 350, 75, 13, Color.MAGENTA);
         */
 
-        /*
+       /* 
         // Define a polygon using its vertices.
         int[][] vertices = {
             {100, 100},
@@ -249,7 +249,7 @@ public class Canvas extends JPanel {
             Line.bresenham(
                 buffer, a[0], a[1], b[0], b[1], Color.BLACK);
         }
-        */
+       */ 
 
         /*
         // Define the polygon vertices.
@@ -382,6 +382,7 @@ public class Canvas extends JPanel {
         );
         */
 
+        /*
         // Original figures
         Circle.midpoint(buffer, 150, 150, 40, Color.BLACK);
         Ellipse.midpoint(buffer, 350, 150, 60, 30, Color.BLACK);
@@ -412,6 +413,7 @@ public class Canvas extends JPanel {
         Ellipse.drawTransformed(
             buffer, 350, 150, 60, 30, 3, Color.GREEN
         );
+        */
     }
 
     @Override

@@ -1,6 +1,7 @@
 package engine.fill;
 
 import engine.core.Pixel;
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
@@ -14,15 +15,11 @@ public class ScanLine {
      * @param vertices the polygon vertices in contour order
      * @param color the fill color
      */
-    public static void fill(
-            BufferedImage buffer,
-            int[][] vertices,
-            Color color) {
+    public static void fill(BufferedImage buffer, int[][] vertices, Color color) {
 
         // A polygon needs at least three vertices.
         if (vertices == null || vertices.length < 3) {
-            throw new IllegalArgumentException(
-                    "A polygon needs at least three vertices.");
+            throw new IllegalArgumentException("A polygon needs at least three vertices.");
         }
 
         // Find the vertical limits of the polygon.
@@ -31,8 +28,7 @@ public class ScanLine {
 
         for (int[] vertex : vertices) {
             if (vertex == null || vertex.length < 2) {
-                throw new IllegalArgumentException(
-                        "Each vertex must contain x and y coordinates.");
+                throw new IllegalArgumentException("Each vertex must contain x and y coordinates.");
             }
 
             minY = Math.min(minY, vertex[1]);
@@ -62,13 +58,10 @@ public class ScanLine {
                 }
 
                 // Use a half-open interval to count shared vertices once.
-                if (y >= Math.min(y1, y2)
-                        && y < Math.max(y1, y2)) {
+                if (y >= Math.min(y1, y2) && y < Math.max(y1, y2)) {
 
                     // Calculate where this edge crosses the current row.
-                    double xIntersection = x1
-                            + (double) (y - y1) * (x2 - x1)
-                            / (y2 - y1);
+                    double xIntersection = x1 + (double) (y - y1) * (x2 - x1) / (y2 - y1);
 
                     intersections[count] = xIntersection;
                     count++;
@@ -91,4 +84,3 @@ public class ScanLine {
         }
     }
 }
-

@@ -1,17 +1,13 @@
-
 package engine.clipping;
 
-/**
- * Implements the Cohen-Sutherland line clipping algorithm
- * for rectangular clipping windows.
- */
+/** Implements the Cohen-Sutherland line clipping algorithm for rectangular clipping windows. */
 public class CohenSutherland {
 
     private static final int INSIDE = 0;
-    private static final int LEFT   = 1;
-    private static final int RIGHT  = 2;
+    private static final int LEFT = 1;
+    private static final int RIGHT = 2;
     private static final int BOTTOM = 4;
-    private static final int TOP    = 8;
+    private static final int TOP = 8;
 
     /**
      * Clips a line segment against a rectangular clipping window.
@@ -24,17 +20,14 @@ public class CohenSutherland {
      * @param ymin the minimum y-coordinate of the clipping window
      * @param xmax the maximum x-coordinate of the clipping window
      * @param ymax the maximum y-coordinate of the clipping window
-     * @return an array containing the clipped endpoints
-     *         {x1, y1, x2, y2}, or null if the line is invisible
+     * @return an array containing the clipped endpoints {x1, y1, x2, y2}, or null if the line is
+     *     invisible
      */
     public static int[] clip(
-            int x1, int y1, int x2, int y2,
-            int xmin, int ymin, int xmax, int ymax) {
+            int x1, int y1, int x2, int y2, int xmin, int ymin, int xmax, int ymax) {
 
         if (xmin > xmax || ymin > ymax) {
-            throw new IllegalArgumentException(
-                "Invalid clipping window boundaries."
-            );
+            throw new IllegalArgumentException("Invalid clipping window boundaries.");
         }
 
         double ax = x1;
@@ -104,9 +97,7 @@ public class CohenSutherland {
      * @param ymax the maximum y-coordinate of the window
      * @return the four-bit region code; zero indicates an inside point
      */
-    private static int computeCode(
-            double x, double y,
-            int xmin, int ymin, int xmax, int ymax) {
+    private static int computeCode(double x, double y, int xmin, int ymin, int xmax, int ymax) {
 
         int code = INSIDE;
 
@@ -125,4 +116,3 @@ public class CohenSutherland {
         return code;
     }
 }
-

@@ -1,8 +1,6 @@
 package engine.transform;
 
-/**
- * Represents a point in two-dimensional space.
- */
+/** Represents a point in two-dimensional space. */
 public class Point2D {
 
     private final double x;
@@ -21,4 +19,3 @@ public class Point2D {
         return y;
     }
 }
-
