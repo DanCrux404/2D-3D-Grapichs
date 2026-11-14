@@ -9,62 +9,78 @@ import java.awt.image.BufferedImage;
 /**
  * Represents a three-dimensional cube.
  *
- * <p>The cube is defined by eight vertices and twelve edges. Each edge is drawn using the Line3D
- * class, which projects its endpoints and reuses the Bresenham algorithm.
+ * <p>The cube is defined by its center point and size. Its eight vertices are calculated when the
+ * cube is drawn.
+ *
+ * <p>Each size unit corresponds to ten coordinate units. The twelve edges are drawn using Line3D.
  */
 public class Cube {
 
-    private final Point3D p1;
-    private final Point3D p2;
-    private final Point3D p3;
-    private final Point3D p4;
-    private final Point3D p5;
-    private final Point3D p6;
-    private final Point3D p7;
-    private final Point3D p8;
+    private static final double PIXELS_PER_UNIT = 10.0;
 
+    private final Point3D center;
+    private final double size;
     private final Line3D line;
 
     /**
-     * Creates a cube with the specified size, position and projection.
+     * Creates a cube with the specified center, size and projection.
      *
-     * @param size the length of each cube edge
-     * @param x the initial x-coordinate
-     * @param y the initial y-coordinate
+     * @param center the geometric center of the cube
+     * @param size the cube size in logical units
      * @param projection the parallel projection used to draw the cube
+     * @throws IllegalArgumentException if the center or projection is null, or if the size is not
+     *     positive and finite
      */
-    public Cube(double size, double x, double y, ParallelProjection projection) {
+    public Cube(Point3D center, double size, ParallelProjection projection) {
 
-        if (size <= 0 || !Double.isFinite(size) || !Double.isFinite(x) || !Double.isFinite(y)) {
-            throw new IllegalArgumentException(
-                    "Cube dimensions and position must be finite, and size must be positive.");
+        if (center == null) {
+            throw new IllegalArgumentException("Cube center cannot be null.");
+        }
+
+        if (size <= 0 || !Double.isFinite(size)) {
+            throw new IllegalArgumentException("Cube size must be positive and finite.");
         }
 
         if (projection == null) {
             throw new IllegalArgumentException("Projection cannot be null.");
         }
 
-        // Define the eight vertices of the cube.
-        p1 = new Point3D(x, y, 0);
-        p2 = new Point3D(x + size, y, 0);
-        p3 = new Point3D(x + size, y + size, 0);
-        p4 = new Point3D(x, y + size, 0);
-
-        p5 = new Point3D(x, y, size);
-        p6 = new Point3D(x + size, y, size);
-        p7 = new Point3D(x + size, y + size, size);
-        p8 = new Point3D(x, y + size, size);
-
-        line = new Line3D(projection);
+        this.center = center;
+        this.size = size;
+        this.line = new Line3D(projection);
     }
 
     /**
      * Draws the twelve edges of the cube.
      *
+     * <p>The eight vertices are calculated using the center and half the cube's side length.
+     *
      * @param buffer the image where the cube will be drawn
      * @param color the color of the cube edges
      */
     public void draw(BufferedImage buffer, Color color) {
+
+        if (buffer == null || color == null) {
+            throw new IllegalArgumentException("Buffer and color cannot be null.");
+        }
+
+        // Calculate half the cube's side length.
+        double halfSize = (size * PIXELS_PER_UNIT) / 2.0;
+
+        double cx = center.getX();
+        double cy = center.getY();
+        double cz = center.getZ();
+
+        // Define the eight vertices relative to the center.
+        Point3D p1 = new Point3D(cx - halfSize, cy - halfSize, cz - halfSize);
+        Point3D p2 = new Point3D(cx + halfSize, cy - halfSize, cz - halfSize);
+        Point3D p3 = new Point3D(cx + halfSize, cy + halfSize, cz - halfSize);
+        Point3D p4 = new Point3D(cx - halfSize, cy + halfSize, cz - halfSize);
+
+        Point3D p5 = new Point3D(cx - halfSize, cy - halfSize, cz + halfSize);
+        Point3D p6 = new Point3D(cx + halfSize, cy - halfSize, cz + halfSize);
+        Point3D p7 = new Point3D(cx + halfSize, cy + halfSize, cz + halfSize);
+        Point3D p8 = new Point3D(cx - halfSize, cy + halfSize, cz + halfSize);
 
         // Bottom face.
         line.draw(buffer, p1, p2, color);

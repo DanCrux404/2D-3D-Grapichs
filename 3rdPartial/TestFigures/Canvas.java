@@ -105,12 +105,13 @@ public class Canvas {
         line.draw(buffer, p1, p2, Color.BLACK);
     }
 
-    /** Draws a test cube using parallel projection. */
     private void drawTestCube() {
 
         ParallelProjection projection = new ParallelProjection(2, 1, 5);
 
-        Cube cube = new Cube(150, 250, 200, projection);
+        Point3D center = new Point3D(400, 300, 0);
+
+        Cube cube = new Cube(center, 10, projection);
 
         cube.draw(buffer, Color.RED);
     }
