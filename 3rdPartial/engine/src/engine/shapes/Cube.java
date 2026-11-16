@@ -1,10 +1,11 @@
 package engine.shapes;
 
 import engine.core.Point3D;
-import engine.transform.ParallelProjection;
+import engine.transform.Projection3D;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import engine.transform.Transform3D;
 
 /**
  * Represents a three-dimensional cube.
@@ -18,7 +19,7 @@ public class Cube {
 
     private static final double PIXELS_PER_UNIT = 10.0;
 
-    private final Point3D center;
+    private Point3D center;
     private final double size;
     private final Line3D line;
 
@@ -31,7 +32,7 @@ public class Cube {
      * @throws IllegalArgumentException if the center or projection is null, or if the size is not
      *     positive and finite
      */
-    public Cube(Point3D center, double size, ParallelProjection projection) {
+    public Cube(Point3D center, double size, Projection3D projection) {
 
         if (center == null) {
             throw new IllegalArgumentException("Cube center cannot be null.");
@@ -99,5 +100,22 @@ public class Cube {
         line.draw(buffer, p2, p6, color);
         line.draw(buffer, p3, p7, color);
         line.draw(buffer, p4, p8, color);
+    }
+
+    /**
+     * Translates the cube using a homogeneous transformation matrix.
+     *
+     * <p>The translation is applied to the cube's center. Its vertices are recalculated when the
+     * cube is drawn.
+     *
+     * @param dx translation distance along the X axis
+     * @param dy translation distance along the Y axis
+     * @param dz translation distance along the Z axis
+     */
+    public void translate(double dx, double dy, double dz) {
+
+        double[][] matrix = Transform3D.translation(dx, dy, dz);
+
+        center = Transform3D.apply(center, matrix);
     }
 }

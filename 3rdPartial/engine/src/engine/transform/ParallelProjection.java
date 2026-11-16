@@ -1,15 +1,12 @@
-
 package engine.transform;
 
 import engine.core.Point3D;
 
 /**
- * Performs parallel projection of three-dimensional points
- * onto the XY plane.
+ * Performs parallel projection of three-dimensional points onto the XY plane.
  *
- * <p>The projection is defined by a direction vector (xp, yp, zp).
- * A line is extended from the original point in the projection
- * direction until it intersects the XY plane, where z = 0.
+ * <p>The projection is defined by a direction vector (xp, yp, zp). A line is extended from the
+ * original point in the projection direction until it intersects the XY plane, where z = 0.
  *
  * <p>The projected coordinates are calculated using:
  *
@@ -18,24 +15,22 @@ import engine.core.Point3D;
  * y2 = y1 - (yp * z1) / zp
  * </pre>
  *
- * <p>This class only performs mathematical calculations.
- * It does not draw pixels or interact with graphical components.
+ * <p>This class only performs mathematical calculations. It does not draw pixels or interact with
+ * graphical components.
  */
-public class ParallelProjection {
+public class ParallelProjection implements Projection3D {
 
     private double xp;
     private double yp;
     private double zp;
 
     /**
-     * Creates a parallel projection using the specified
-     * direction vector.
+     * Creates a parallel projection using the specified direction vector.
      *
      * @param xp the x component of the projection direction
      * @param yp the y component of the projection direction
      * @param zp the z component of the projection direction
-     * @throws IllegalArgumentException if any component is not finite
-     *                                   or zp is zero
+     * @throws IllegalArgumentException if any component is not finite or zp is zero
      */
     public ParallelProjection(double xp, double yp, double zp) {
         setDirection(xp, yp, zp);
@@ -51,9 +46,7 @@ public class ParallelProjection {
     public Point2D project(Point3D point) {
 
         if (point == null) {
-            throw new IllegalArgumentException(
-                "The point cannot be null."
-            );
+            throw new IllegalArgumentException("The point cannot be null.");
         }
 
         double x1 = point.getX();
@@ -72,18 +65,13 @@ public class ParallelProjection {
      * @param xp the new x component
      * @param yp the new y component
      * @param zp the new z component
-     * @throws IllegalArgumentException if any component is not finite
-     *                                   or zp is zero
+     * @throws IllegalArgumentException if any component is not finite or zp is zero
      */
     public void setDirection(double xp, double yp, double zp) {
 
-        if (!Double.isFinite(xp)
-                || !Double.isFinite(yp)
-                || !Double.isFinite(zp)
-                || zp == 0.0) {
+        if (!Double.isFinite(xp) || !Double.isFinite(yp) || !Double.isFinite(zp) || zp == 0.0) {
             throw new IllegalArgumentException(
-                "Projection direction must be finite and zp must not be zero."
-            );
+                    "Projection direction must be finite and zp must not be zero.");
         }
 
         this.xp = xp;
@@ -118,4 +106,3 @@ public class ParallelProjection {
         return zp;
     }
 }
-
