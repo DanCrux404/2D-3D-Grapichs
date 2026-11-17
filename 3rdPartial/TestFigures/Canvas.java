@@ -3,6 +3,7 @@ import engine.shapes.Cube;
 import engine.shapes.Line3D;
 import engine.transform.ParallelProjection;
 import engine.transform.PerspectiveProjection;
+import engine.transform.Transform3D;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -49,7 +50,9 @@ public class Canvas {
         // drawTestLine();
         // drawTestCube();
         // drawPerspectiveLine();
-        drawPerspectiveCube();
+        //drawPerspectiveCube();
+        testCubeScaling();
+        //testScaling();
         configureFrame();
         configureKeyBindings();
     }
@@ -204,5 +207,40 @@ public class Canvas {
         perspectiveCube.draw(buffer, Color.RED);
 
         panel.repaint();
+    }
+
+    private void testScaling() {
+
+        Point3D point = new Point3D(10, 20, 30);
+
+        double[][] matrix = Transform3D.scaling(2, 2, 2);
+
+        Point3D scaledPoint = Transform3D.apply(point, matrix);
+
+        System.out.println(
+                "Original: (" + point.getX() + ", " + point.getY() + ", " + point.getZ() + ")");
+
+        System.out.println(
+                "Escalado: ("
+                        + scaledPoint.getX()
+                        + ", "
+                        + scaledPoint.getY()
+                        + ", "
+                        + scaledPoint.getZ()
+                        + ")");
+    }
+
+    private void testCubeScaling() {
+
+        PerspectiveProjection projection = new PerspectiveProjection(700, 450, -500);
+
+        Point3D center = new Point3D(400, 300, 200);
+
+        perspectiveCube = new Cube(center, 20, projection);
+
+        // Apply scaling.
+        perspectiveCube.scale(1, 0.5, 1);
+
+        perspectiveCube.draw(buffer, Color.RED);
     }
 }

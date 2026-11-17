@@ -3,16 +3,14 @@ package engine.transform;
 import engine.core.Point3D;
 
 /**
- * Provides three-dimensional geometric transformations
- * using homogeneous coordinates.
+ * Provides three-dimensional geometric transformations using homogeneous coordinates.
  *
- * <p>Points are represented as column vectors, and transformations
- * are applied through matrix multiplication.
+ * <p>Points are represented as column vectors, and transformations are applied through matrix
+ * multiplication.
  */
 public final class Transform3D {
 
-    private Transform3D() {
-    }
+    private Transform3D() {}
 
     /**
      * Creates a three-dimensional translation matrix.
@@ -22,8 +20,7 @@ public final class Transform3D {
      * @param dz translation distance along the Z axis
      * @return the 4x4 translation matrix
      */
-    public static double[][] translation(
-            double dx, double dy, double dz) {
+    public static double[][] translation(double dx, double dy, double dz) {
 
         return new double[][] {
             {1, 0, 0, dx},
@@ -34,10 +31,27 @@ public final class Transform3D {
     }
 
     /**
+     * Creates a three-dimensional scaling matrix.
+     *
+     * @param sx scaling factor along the X axis
+     * @param sy scaling factor along the Y axis
+     * @param sz scaling factor along the Z axis
+     * @return the 4x4 scaling matrix
+     */
+    public static double[][] scaling(double sx, double sy, double sz) {
+
+        return new double[][] {
+            {sx, 0, 0, 0},
+            {0, sy, 0, 0},
+            {0, 0, sz, 0},
+            {0, 0, 0, 1}
+        };
+    }
+
+    /**
      * Applies a homogeneous transformation matrix to a 3D point.
      *
-     * <p>The point is represented as a column vector:
-     * [x, y, z, 1].
+     * <p>The point is represented as a column vector: [x, y, z, 1].
      *
      * @param point the point to transform
      * @param matrix the 4x4 transformation matrix
@@ -47,26 +61,17 @@ public final class Transform3D {
     public static Point3D apply(Point3D point, double[][] matrix) {
 
         if (point == null || matrix == null || matrix.length != 4) {
-            throw new IllegalArgumentException(
-                "Point and a 4x4 matrix are required."
-            );
+            throw new IllegalArgumentException("Point and a 4x4 matrix are required.");
         }
 
         for (double[] row : matrix) {
             if (row == null || row.length != 4) {
-                throw new IllegalArgumentException(
-                    "Transformation matrix must be 4x4."
-                );
+                throw new IllegalArgumentException("Transformation matrix must be 4x4.");
             }
         }
 
         // Represent the 3D point using homogeneous coordinates.
-        double[] vector = {
-            point.getX(),
-            point.getY(),
-            point.getZ(),
-            1
-        };
+        double[] vector = {point.getX(), point.getY(), point.getZ(), 1};
 
         double[] result = new double[4];
 
@@ -77,11 +82,6 @@ public final class Transform3D {
             }
         }
 
-        return new Point3D(
-            result[0] / result[3],
-            result[1] / result[3],
-            result[2] / result[3]
-        );
+        return new Point3D(result[0] / result[3], result[1] / result[3], result[2] / result[3]);
     }
 }
-
