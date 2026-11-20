@@ -17,6 +17,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.Timer;
 
 public class Canvas {
 
@@ -27,6 +28,9 @@ public class Canvas {
     private final BufferedImage buffer;
     private static final double TRANSLATION_STEP = 10.0;
     private Cube perspectiveCube;
+
+    /** Timer responsible for the automatic cube rotation. */
+    private Timer animationTimer;
 
     public Canvas() {
 
@@ -50,9 +54,10 @@ public class Canvas {
         // drawTestLine();
         // drawTestCube();
         // drawPerspectiveLine();
-        //drawPerspectiveCube();
+        // drawPerspectiveCube();
         testCubeScaling();
-        //testScaling();
+        startAnimation();
+        // testScaling();
         configureFrame();
         configureKeyBindings();
     }
@@ -239,8 +244,40 @@ public class Canvas {
         perspectiveCube = new Cube(center, 20, projection);
 
         // Apply scaling.
-        perspectiveCube.scale(1, 0.5, 1);
+        // perspectiveCube.scale(1, 0.5, 1);
+
+        // perspectiveCube.rotateX(30);
+        // perspectiveCube.rotateY(30);
+        perspectiveCube.rotateZ(30);
 
         perspectiveCube.draw(buffer, Color.RED);
+
+        perspectiveCube.draw(buffer, Color.RED);
+    }
+
+    /** Starts the automatic rotation of the cube around its three axes. */
+    private void startAnimation() {
+        animationTimer =
+                new Timer(
+                        // Why 16? because is on miliseconds
+                        // between updates that is closer to 
+                        // 60 updates peer second.
+                        16,
+                        e -> {
+
+                            // Rotate around the X axis.
+                            //perspectiveCube.rotateX(0.5);
+
+                            // Rotate around the Y axis.
+                            //perspectiveCube.rotateY(1.0);
+
+                            // Rotate around the Z axis.
+                            perspectiveCube.rotateZ(2.0);
+
+                            // Redraw the scene with the updated rotation.
+                            redrawScene();
+                        });
+
+        animationTimer.start();
     }
 }

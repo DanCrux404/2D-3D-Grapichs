@@ -26,6 +26,15 @@ public class Cube {
     private double scaleY = 1.0;
     private double scaleZ = 1.0;
 
+    /** Accumulated rotation angle around the X axis. */
+    private double rotationX = 0.0;
+
+    /** Accumulated rotation angle around the Y axis. */
+    private double rotationY = 0.0;
+
+    /** Accumulated rotation angle around the Z axis. */
+    private double rotationZ = 0.0;
+
     /**
      * Creates a cube with the specified center, size and projection.
      *
@@ -87,6 +96,15 @@ public class Cube {
         Point3D p6 = new Point3D(cx + halfX, cy - halfY, cz + halfZ);
         Point3D p7 = new Point3D(cx + halfX, cy + halfY, cz + halfZ);
         Point3D p8 = new Point3D(cx - halfX, cy + halfY, cz + halfZ);
+
+        p1 = rotatePoint(p1);
+        p2 = rotatePoint(p2);
+        p3 = rotatePoint(p3);
+        p4 = rotatePoint(p4);
+        p5 = rotatePoint(p5);
+        p6 = rotatePoint(p6);
+        p7 = rotatePoint(p7);
+        p8 = rotatePoint(p8);
 
         // Bottom face.
         line.draw(buffer, p1, p2, color);
@@ -151,5 +169,60 @@ public class Cube {
         scaleX = scaled.getX();
         scaleY = scaled.getY();
         scaleZ = scaled.getZ();
+    }
+
+    /**
+     * Rotates the cube around the X axis.
+     *
+     * @param angle rotation angle in degrees
+     */
+    public void rotateX(double angle) {
+        rotationX += angle;
+    }
+
+    /**
+     * Rotates the cube around the Y axis.
+     *
+     * @param angle rotation angle in degrees
+     */
+    public void rotateY(double angle) {
+        rotationY += angle;
+    }
+
+    /**
+     * Rotates the cube around the Z axis.
+     *
+     * @param angle rotation angle in degrees
+     */
+    public void rotateZ(double angle) {
+        rotationZ += angle;
+    }
+
+    /**
+     * Applies the accumulated rotations to a vertex around the cube's own center.
+     *
+     * @param point original vertex
+     * @return rotated vertex
+     */
+    private Point3D rotatePoint(Point3D point) {
+        // Move the vertex to the cube's local origin.
+        double[][] toOrigin =
+                Transform3D.translation(-center.getX(), -center.getY(), -center.getZ());
+
+        Point3D localPoint = Transform3D.apply(point, toOrigin);
+
+        // Apply the accumulated rotations.
+        double[][] rx = Transform3D.rotationX(rotationX);
+        double[][] ry = Transform3D.rotationY(rotationY);
+        double[][] rz = Transform3D.rotationZ(rotationZ);
+
+        localPoint = Transform3D.apply(localPoint, rx);
+        localPoint = Transform3D.apply(localPoint, ry);
+        localPoint = Transform3D.apply(localPoint, rz);
+
+        // Return the vertex to its original position.
+        double[][] toCenter = Transform3D.translation(center.getX(), center.getY(), center.getZ());
+
+        return Transform3D.apply(localPoint, toCenter);
     }
 }

@@ -49,6 +49,63 @@ public final class Transform3D {
     }
 
     /**
+     * Creates a rotation matrix around the X axis.
+     *
+     * @param angle rotation angle in degrees
+     * @return 4x4 rotation matrix
+     */
+    public static double[][] rotationX(double angle) {
+        double radians = Math.toRadians(angle);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+
+        return new double[][] {
+            {1, 0, 0, 0},
+            {0, cos, -sin, 0},
+            {0, sin, cos, 0},
+            {0, 0, 0, 1}
+        };
+    }
+
+    /**
+     * Creates a rotation matrix around the Y axis.
+     *
+     * @param angle rotation angle in degrees
+     * @return 4x4 rotation matrix
+     */
+    public static double[][] rotationY(double angle) {
+        double radians = Math.toRadians(angle);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+
+        return new double[][] {
+            {cos, 0, sin, 0},
+            {0, 1, 0, 0},
+            {-sin, 0, cos, 0},
+            {0, 0, 0, 1}
+        };
+    }
+
+    /**
+     * Creates a rotation matrix around the Z axis.
+     *
+     * @param angle rotation angle in degrees
+     * @return 4x4 rotation matrix
+     */
+    public static double[][] rotationZ(double angle) {
+        double radians = Math.toRadians(angle);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+
+        return new double[][] {
+            {cos, -sin, 0, 0},
+            {sin, cos, 0, 0},
+            {0, 0, 1, 0},
+            {0, 0, 0, 1}
+        };
+    }
+
+    /**
      * Applies a homogeneous transformation matrix to a 3D point.
      *
      * <p>The point is represented as a column vector: [x, y, z, 1].
