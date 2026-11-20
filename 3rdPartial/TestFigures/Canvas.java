@@ -1,11 +1,14 @@
 import engine.core.Point3D;
 import engine.shapes.Cube;
 import engine.shapes.ExplicitCurve3D;
+import engine.shapes.ExplicitSurface3D;
 import engine.shapes.Line3D;
 import engine.shapes.ParametricCurve3D;
+import engine.shapes.ParametricSurface3D;
 import engine.transform.ParallelProjection;
 import engine.transform.PerspectiveProjection;
 import engine.transform.Transform3D;
+import engine.shapes.MeshType;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -35,6 +38,8 @@ public class Canvas {
     private Timer curveTimer;
     private ParametricCurve3D parametricCurve;
     private Timer parametricTimer;
+    private ExplicitSurface3D explicitSurface;
+    private ParametricSurface3D parametricSurface;
 
     /** Timer responsible for the automatic cube rotation. */
     private Timer animationTimer;
@@ -71,7 +76,9 @@ public class Canvas {
         // Automatic rotation:
         // testExplicitCurveAutomatic();
         // testParametricCurveKeyboard();
-        testParametricCurveAutomatic();
+        //testParametricCurveAutomatic();
+        //testExplicitSurface();
+        testParametricSurface();
         configureFrame();
         // configureKeyBindings();
     }
@@ -473,5 +480,140 @@ public class Canvas {
                         });
 
         parametricTimer.start();
+    }
+
+    private void setupExplicitSurface() {
+
+        PerspectiveProjection projection = new PerspectiveProjection(400, 300, -500);
+
+        explicitSurface =
+                new ExplicitSurface3D(
+                        (x, y) -> 80 * Math.sin(x / 50.0) * Math.cos(y / 50.0),
+                        -150,
+                        150,
+                        -150,
+                        150,
+                        40,
+                        40,
+                        projection,
+                        MeshType.TRIANGULAR);
+
+        explicitSurface.translate(400, 300, 200);
+    }
+
+    private void redrawExplicitSurfaceScene() {
+
+        Graphics2D g = buffer.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
+        g.dispose();
+
+        explicitSurface.draw(buffer, Color.BLUE);
+
+        panel.repaint();
+    }
+
+    private void setupParametricSurface() {
+
+        PerspectiveProjection projection = new PerspectiveProjection(400, 300, -500);
+
+        double majorRadius = 100;
+        double minorRadius = 40;
+
+        parametricSurface =
+                new ParametricSurface3D(
+                        (s, t) -> (majorRadius + minorRadius * Math.cos(s)) * Math.cos(t),
+                        (s, t) -> (majorRadius + minorRadius * Math.cos(s)) * Math.sin(t),
+                        (s, t) -> minorRadius * Math.sin(s),
+                        0,
+                        2 * Math.PI,
+                        0,
+                        2 * Math.PI,
+                        50,
+                        50,
+                        projection,
+                        MeshType.RECTANGULAR);
+
+        parametricSurface.translate(400, 300, 200);
+    }
+
+    private void redrawParametricSurfaceScene() {
+
+        Graphics2D g = buffer.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
+        g.dispose();
+
+        parametricSurface.draw(buffer, Color.BLUE);
+
+        panel.repaint();
+    }
+
+    private void bindSurfaceRotationKey(String key, String axis, double angle, boolean parametric) {
+        String actionName = "surface_" + axis + "_" + key;
+
+        panel.getInputMap(JPanel.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke("pressed " + key), actionName);
+
+        panel.getActionMap()
+                .put(
+                        actionName,
+                        new AbstractAction() {
+
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+
+                                if (parametric) {
+                                    switch (axis) {
+                                        case "X" -> parametricSurface.rotateX(angle);
+                                        case "Y" -> parametricSurface.rotateY(angle);
+                                        case "Z" -> parametricSurface.rotateZ(angle);
+                                    }
+
+                                    redrawParametricSurfaceScene();
+
+                                } else {
+                                    switch (axis) {
+                                        case "X" -> explicitSurface.rotateX(angle);
+                                        case "Y" -> explicitSurface.rotateY(angle);
+                                        case "Z" -> explicitSurface.rotateZ(angle);
+                                    }
+
+                                    redrawExplicitSurfaceScene();
+                                }
+                            }
+                        });
+    }
+
+    private void testExplicitSurface() {
+
+        setupExplicitSurface();
+
+        bindSurfaceRotationKey("W", "X", 5, false);
+        bindSurfaceRotationKey("S", "X", -5, false);
+
+        bindSurfaceRotationKey("A", "Y", 5, false);
+        bindSurfaceRotationKey("D", "Y", -5, false);
+
+        bindSurfaceRotationKey("Q", "Z", 5, false);
+        bindSurfaceRotationKey("E", "Z", -5, false);
+
+        redrawExplicitSurfaceScene();
+    }
+
+    private void testParametricSurface() {
+
+        setupParametricSurface();
+
+        bindSurfaceRotationKey("W", "X", 5, true);
+        bindSurfaceRotationKey("S", "X", -5, true);
+
+        bindSurfaceRotationKey("A", "Y", 5, true);
+        bindSurfaceRotationKey("D", "Y", -5, true);
+
+        bindSurfaceRotationKey("Q", "Z", 5, true);
+        bindSurfaceRotationKey("E", "Z", -5, true);
+
+        redrawParametricSurfaceScene();
     }
 }
