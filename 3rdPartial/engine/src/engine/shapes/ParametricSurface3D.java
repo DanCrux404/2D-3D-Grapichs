@@ -163,4 +163,8 @@ public class ParametricSurface3D {
     public void drawRainbow(BufferedImage buffer) {
         mesh.drawRainbow(buffer);
     }
+
+    public void drawGradient(BufferedImage buffer, Color startColor, Color endColor) {
+        mesh.drawGradient(buffer, startColor, endColor);
+    }
 }

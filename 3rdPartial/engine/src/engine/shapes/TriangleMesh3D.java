@@ -3,6 +3,7 @@ package engine.shapes;
 import engine.core.Point3D;
 import engine.transform.Projection3D;
 import engine.transform.Transform3D;
+import engine.util.ColorUtils;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -242,7 +243,7 @@ public class TriangleMesh3D implements SurfaceMesh {
         // Draw horizontal, vertical and diagonal edges.
         for (int i = 0; i < rows; i++) {
             double fraction = (double) i / (rows - 1);
-            Color color = rainbowColor(fraction);
+            Color color = ColorUtils.rainbow(fraction);;
 
             for (int j = 0; j < columns; j++) {
 
@@ -258,7 +259,7 @@ public class TriangleMesh3D implements SurfaceMesh {
                 if (i + 1 < rows) {
                     double nextFraction = (double) (i + 1) / (rows - 1);
 
-                    Color nextColor = rainbowColor((fraction + nextFraction) / 2.0);
+                    Color nextColor = ColorUtils.rainbow(fraction);;
 
                     // Vertical edge.
                     line.draw(
@@ -280,15 +281,62 @@ public class TriangleMesh3D implements SurfaceMesh {
         }
     }
 
-    /**
-     * Generates a rainbow color for a normalized position.
-     *
-     * @param fraction position between 0.0 and 1.0
-     * @return corresponding rainbow color
-     */
-    private Color rainbowColor(double fraction) {
-        float hue = (float) (0.85 * (1.0 - fraction));
+    @Override
+    public void drawGradient(BufferedImage buffer, Color startColor, Color endColor) {
+        if (buffer == null || startColor == null || endColor == null) {
+            throw new IllegalArgumentException("Buffer and colors cannot be null.");
+        }
 
-        return Color.getHSBColor(hue, 1.0f, 1.0f);
+        int rows = vertices.length;
+        int columns = vertices[0].length;
+
+        Point3D[][] transformedVertices = new Point3D[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                transformedVertices[i][j] = transformPoint(vertices[i][j]);
+            }
+        }
+
+        for (int i = 0; i < rows; i++) {
+            double fraction = (double) i / (rows - 1);
+
+            Color color = ColorUtils.interpolate(startColor, endColor, fraction);
+
+            Color nextColor =
+                    i + 1 < rows
+                            ? ColorUtils.interpolate(
+                                    startColor, endColor, (double) (i + 1) / (rows - 1))
+                            : color;
+
+            Color middleColor = ColorUtils.interpolate(startColor, endColor, fraction);
+
+            for (int j = 0; j < columns; j++) {
+
+                if (j + 1 < columns) {
+                    line.draw(
+                            buffer,
+                            transformedVertices[i][j],
+                            transformedVertices[i][j + 1],
+                            color);
+                }
+
+                if (i + 1 < rows) {
+                    line.draw(
+                            buffer,
+                            transformedVertices[i][j],
+                            transformedVertices[i + 1][j],
+                            middleColor);
+
+                    if (j + 1 < columns) {
+                        line.draw(
+                                buffer,
+                                transformedVertices[i][j],
+                                transformedVertices[i + 1][j + 1],
+                                middleColor);
+                    }
+                }
+            }
+        }
     }
 }

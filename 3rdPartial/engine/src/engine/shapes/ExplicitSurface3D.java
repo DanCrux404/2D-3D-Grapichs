@@ -136,4 +136,8 @@ public class ExplicitSurface3D {
     public void draw(BufferedImage buffer, Color color) {
         mesh.draw(buffer, color);
     }
+
+    public void drawGradient(BufferedImage buffer, Color startColor, Color endColor) {
+        mesh.drawGradient(buffer, startColor, endColor);
+    }
 }

@@ -3,11 +3,12 @@ package engine.shapes;
 import engine.core.Point3D;
 import engine.transform.Projection3D;
 import engine.transform.Transform3D;
+import engine.util.ColorUtils;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-public class SurfaceMesh3D implements SurfaceMesh{
+public class SurfaceMesh3D implements SurfaceMesh {
 
     private final Point3D[][] vertices;
     private final Point3D center;
@@ -207,5 +208,51 @@ public class SurfaceMesh3D implements SurfaceMesh{
         transformed = Transform3D.apply(transformed, toPosition);
 
         return transformed;
+    }
+
+    @Override
+    public void drawGradient(BufferedImage buffer, Color startColor, Color endColor) {
+        if (buffer == null || startColor == null || endColor == null) {
+            throw new IllegalArgumentException("Buffer and colors cannot be null.");
+        }
+
+        int rows = vertices.length;
+        int columns = vertices[0].length;
+
+        Point3D[][] transformedVertices = new Point3D[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                transformedVertices[i][j] = transformPoint(vertices[i][j]);
+            }
+        }
+
+        for (int i = 0; i < rows; i++) {
+            double fraction = (double) i / (rows - 1);
+            Color color = ColorUtils.interpolate(startColor, endColor, fraction);
+
+            for (int j = 0; j < columns; j++) {
+
+                if (j + 1 < columns) {
+                    line.draw(
+                            buffer,
+                            transformedVertices[i][j],
+                            transformedVertices[i][j + 1],
+                            color);
+                }
+
+                if (i + 1 < rows) {
+                    Color nextColor = ColorUtils.interpolate(startColor, endColor, fraction);
+
+                    Color middleColor = ColorUtils.interpolate(startColor, endColor, fraction);
+
+                    line.draw(
+                            buffer,
+                            transformedVertices[i][j],
+                            transformedVertices[i + 1][j],
+                            middleColor);
+                }
+            }
+        }
     }
 }

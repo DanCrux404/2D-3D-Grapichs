@@ -20,4 +20,19 @@ public interface SurfaceMesh {
     default void drawRainbow(BufferedImage buffer) {
         draw(buffer, Color.BLUE);
     }
+
+    /**
+     * Draws the mesh using a gradient between two colors.
+     *
+     * @param buffer image where the mesh will be drawn
+     * @param startColor initial gradient color
+     * @param endColor final gradient color
+     */
+    default void drawGradient(BufferedImage buffer, Color startColor, Color endColor) {
+        if (startColor == null || endColor == null) {
+            throw new IllegalArgumentException("Gradient colors cannot be null.");
+        }
+
+        draw(buffer, startColor);
+    }
 }

@@ -66,7 +66,7 @@ public class Canvas {
         // drawTestLine();
         // drawTestCube();
         // drawPerspectiveLine();
-        // drawPerspectiveCube();
+        drawPerspectiveCube();
         // testCubeScaling();
         // startAnimation();
         // testScaling();
@@ -79,9 +79,9 @@ public class Canvas {
         // testParametricCurveAutomatic();
         // testExplicitSurface();
         // testParametricSurface();
-        setupCylinder();
-        redrawCylinderScene();
-        animateCylinder();
+        //setupCylinder();
+        //redrawCylinderScene();
+        //animateCylinder();
         configureFrame();
         // configureKeyBindings();
     }
@@ -178,7 +178,8 @@ public class Canvas {
 
         perspectiveCube = new Cube(center, 20, projection);
 
-        perspectiveCube.draw(buffer, Color.RED);
+        //perspectiveCube.draw(buffer, Color.RED);
+        perspectiveCube.draw(buffer, new Color(255, 100, 40));
     }
 
     /**
@@ -652,7 +653,9 @@ public class Canvas {
         g.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
         g.dispose();
 
-        cylinder.drawRainbow(buffer);
+        // cylinder.drawRainbow(buffer);
+        cylinder.drawGradient(buffer, Color.BLUE, Color.CYAN);
+        cylinder.drawGradient(buffer, new Color(255, 40, 40), new Color(255, 220, 0));
 
         panel.repaint();
     }
