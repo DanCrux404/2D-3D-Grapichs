@@ -1,6 +1,8 @@
 import engine.core.Point3D;
 import engine.shapes.Cube;
+import engine.shapes.ExplicitCurve3D;
 import engine.shapes.Line3D;
+import engine.shapes.ParametricCurve3D;
 import engine.transform.ParallelProjection;
 import engine.transform.PerspectiveProjection;
 import engine.transform.Transform3D;
@@ -8,6 +10,7 @@ import engine.transform.Transform3D;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -28,6 +31,10 @@ public class Canvas {
     private final BufferedImage buffer;
     private static final double TRANSLATION_STEP = 10.0;
     private Cube perspectiveCube;
+    private ExplicitCurve3D explicitCurve;
+    private Timer curveTimer;
+    private ParametricCurve3D parametricCurve;
+    private Timer parametricTimer;
 
     /** Timer responsible for the automatic cube rotation. */
     private Timer animationTimer;
@@ -55,11 +62,18 @@ public class Canvas {
         // drawTestCube();
         // drawPerspectiveLine();
         // drawPerspectiveCube();
-        testCubeScaling();
-        startAnimation();
+        // testCubeScaling();
+        // startAnimation();
         // testScaling();
+        // Keyboard-controlled rotation:
+        // testExplicitCurveKeyboard();
+
+        // Automatic rotation:
+        // testExplicitCurveAutomatic();
+        // testParametricCurveKeyboard();
+        testParametricCurveAutomatic();
         configureFrame();
-        configureKeyBindings();
+        // configureKeyBindings();
     }
 
     private void initComponents() {
@@ -260,16 +274,16 @@ public class Canvas {
         animationTimer =
                 new Timer(
                         // Why 16? because is on miliseconds
-                        // between updates that is closer to 
+                        // between updates that is closer to
                         // 60 updates peer second.
                         16,
                         e -> {
 
                             // Rotate around the X axis.
-                            //perspectiveCube.rotateX(0.5);
+                            // perspectiveCube.rotateX(0.5);
 
                             // Rotate around the Y axis.
-                            //perspectiveCube.rotateY(1.0);
+                            // perspectiveCube.rotateY(1.0);
 
                             // Rotate around the Z axis.
                             perspectiveCube.rotateZ(2.0);
@@ -279,5 +293,185 @@ public class Canvas {
                         });
 
         animationTimer.start();
+    }
+
+    private void setupExplicitCurve() {
+        PerspectiveProjection projection = new PerspectiveProjection(400, 300, -500);
+
+        explicitCurve =
+                new ExplicitCurve3D(x -> Math.cos(x), -2 * Math.PI, 2 * Math.PI, 100, projection);
+
+        // Adjust the curve's dimensions.
+        explicitCurve.scale(40, 40, 1);
+
+        // Position the curve in the 3D scene.
+        explicitCurve.translate(400, 300, 200);
+    }
+
+    private void redrawCurveScene() {
+        Graphics2D g = buffer.createGraphics();
+
+        g.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
+
+        g.dispose();
+
+        explicitCurve.draw(buffer, Color.BLACK);
+
+        panel.repaint();
+    }
+
+    /** Initializes the explicit curve for keyboard-controlled rotation. */
+    private void testExplicitCurveKeyboard() {
+        setupExplicitCurve();
+
+        bindCurveRotationKey("W", 2, 0, 0);
+        bindCurveRotationKey("S", -2, 0, 0);
+
+        bindCurveRotationKey("A", 0, 2, 0);
+        bindCurveRotationKey("D", 0, -2, 0);
+
+        bindCurveRotationKey("Q", 0, 0, 2);
+        bindCurveRotationKey("E", 0, 0, -2);
+
+        redrawCurveScene();
+    }
+
+    /**
+     * Binds a keyboard key to a curve rotation.
+     *
+     * @param key keyboard key
+     * @param angleX rotation increment around X
+     * @param angleY rotation increment around Y
+     * @param angleZ rotation increment around Z
+     */
+    private void bindCurveRotationKey(String key, double angleX, double angleY, double angleZ) {
+
+        String actionName = "curveRotation" + key;
+
+        panel.getInputMap(javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke(key), actionName);
+
+        panel.getActionMap()
+                .put(
+                        actionName,
+                        new javax.swing.AbstractAction() {
+                            @Override
+                            public void actionPerformed(java.awt.event.ActionEvent e) {
+
+                                explicitCurve.rotateX(angleX);
+                                explicitCurve.rotateY(angleY);
+                                explicitCurve.rotateZ(angleZ);
+
+                                redrawCurveScene();
+                            }
+                        });
+    }
+
+    /** Starts the automatic rotation of the explicit curve. */
+    private void testExplicitCurveAutomatic() {
+        setupExplicitCurve();
+
+        curveTimer =
+                new Timer(
+                        16,
+                        e -> {
+                            explicitCurve.rotateX(0.5);
+                            explicitCurve.rotateY(0.5);
+                            explicitCurve.rotateZ(0.5);
+
+                            redrawCurveScene();
+                        });
+
+        curveTimer.start();
+    }
+
+    private void setupParametricCurve() {
+
+        PerspectiveProjection projection = new PerspectiveProjection(400, 300, -500);
+
+        parametricCurve =
+                new ParametricCurve3D(
+                        t -> 100 * Math.sin(3 * t),
+                        t -> 100 * Math.sin(4 * t),
+                        t -> 100 * Math.sin(5 * t),
+                        0,
+                        2 * Math.PI,
+                        1000,
+                        projection);
+
+        parametricCurve.translate(400, 300, 200);
+    }
+
+    private void redrawParametricScene() {
+
+        Graphics2D g = buffer.createGraphics();
+
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
+
+        g.dispose();
+
+        parametricCurve.draw(buffer, Color.BLUE);
+
+        panel.repaint();
+    }
+
+    private void testParametricCurveKeyboard() {
+
+        setupParametricCurve();
+
+        bindParametricRotationKey("W", 2, 0, 0);
+        bindParametricRotationKey("S", -2, 0, 0);
+
+        bindParametricRotationKey("A", 0, 2, 0);
+        bindParametricRotationKey("D", 0, -2, 0);
+
+        bindParametricRotationKey("Q", 0, 0, 2);
+        bindParametricRotationKey("E", 0, 0, -2);
+
+        redrawParametricScene();
+    }
+
+    private void bindParametricRotationKey(
+            String key, double angleX, double angleY, double angleZ) {
+
+        String actionName = "parametricRotation" + key;
+
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke("pressed " + key), actionName);
+
+        panel.getActionMap()
+                .put(
+                        actionName,
+                        new AbstractAction() {
+
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+
+                                parametricCurve.rotateX(angleX);
+                                parametricCurve.rotateY(angleY);
+                                parametricCurve.rotateZ(angleZ);
+
+                                redrawParametricScene();
+                            }
+                        });
+    }
+
+    private void testParametricCurveAutomatic() {
+
+        setupParametricCurve();
+
+        parametricTimer =
+                new Timer(
+                        16,
+                        e -> {
+                            parametricCurve.rotateX(0.5);
+                            parametricCurve.rotateY(0.5);
+                            parametricCurve.rotateZ(0.5);
+
+                            redrawParametricScene();
+                        });
+
+        parametricTimer.start();
     }
 }
