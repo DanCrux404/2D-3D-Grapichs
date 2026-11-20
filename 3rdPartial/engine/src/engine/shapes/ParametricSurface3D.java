@@ -154,4 +154,13 @@ public class ParametricSurface3D {
     public void draw(BufferedImage buffer, Color color) {
         mesh.draw(buffer, color);
     }
+
+    /**
+     * Draws the parametric surface with a rainbow gradient.
+     *
+     * @param buffer image where the surface will be drawn
+     */
+    public void drawRainbow(BufferedImage buffer) {
+        mesh.drawRainbow(buffer);
+    }
 }

@@ -25,26 +25,17 @@ public class TriangleMesh3D implements SurfaceMesh {
     private double rotationY = 0.0;
     private double rotationZ = 0.0;
 
-    public TriangleMesh3D(
-        Point3D[][] vertices,
-        Projection3D projection
-    ) {
+    public TriangleMesh3D(Point3D[][] vertices, Projection3D projection) {
         if (vertices == null || vertices.length < 2) {
-            throw new IllegalArgumentException(
-                "A surface must have at least 2 rows."
-            );
+            throw new IllegalArgumentException("A surface must have at least 2 rows.");
         }
 
         if (projection == null) {
-            throw new IllegalArgumentException(
-                "Projection cannot be null."
-            );
+            throw new IllegalArgumentException("Projection cannot be null.");
         }
 
         if (vertices[0] == null || vertices[0].length < 2) {
-            throw new IllegalArgumentException(
-                "A surface must have at least 2 columns."
-            );
+            throw new IllegalArgumentException("A surface must have at least 2 columns.");
         }
 
         int columns = vertices[0].length;
@@ -60,11 +51,8 @@ public class TriangleMesh3D implements SurfaceMesh {
 
         for (int i = 0; i < vertices.length; i++) {
 
-            if (vertices[i] == null ||
-                vertices[i].length != columns) {
-                throw new IllegalArgumentException(
-                    "Surface mesh must be rectangular."
-                );
+            if (vertices[i] == null || vertices[i].length != columns) {
+                throw new IllegalArgumentException("Surface mesh must be rectangular.");
             }
 
             for (int j = 0; j < columns; j++) {
@@ -72,9 +60,7 @@ public class TriangleMesh3D implements SurfaceMesh {
                 Point3D point = vertices[i][j];
 
                 if (point == null) {
-                    throw new IllegalArgumentException(
-                        "Surface vertices cannot be null."
-                    );
+                    throw new IllegalArgumentException("Surface vertices cannot be null.");
                 }
 
                 this.vertices[i][j] = point;
@@ -90,23 +76,15 @@ public class TriangleMesh3D implements SurfaceMesh {
             }
         }
 
-        center = new Point3D(
-            (minX + maxX) / 2.0,
-            (minY + maxY) / 2.0,
-            (minZ + maxZ) / 2.0
-        );
+        center = new Point3D((minX + maxX) / 2.0, (minY + maxY) / 2.0, (minZ + maxZ) / 2.0);
 
         line = new Line3D(projection);
     }
 
     @Override
     public void translate(double dx, double dy, double dz) {
-        if (!Double.isFinite(dx) ||
-            !Double.isFinite(dy) ||
-            !Double.isFinite(dz)) {
-            throw new IllegalArgumentException(
-                "Translation values must be finite."
-            );
+        if (!Double.isFinite(dx) || !Double.isFinite(dy) || !Double.isFinite(dz)) {
+            throw new IllegalArgumentException("Translation values must be finite.");
         }
 
         translationX += dx;
@@ -116,13 +94,13 @@ public class TriangleMesh3D implements SurfaceMesh {
 
     @Override
     public void scale(double sx, double sy, double sz) {
-        if (!Double.isFinite(sx) ||
-            !Double.isFinite(sy) ||
-            !Double.isFinite(sz) ||
-            sx <= 0 || sy <= 0 || sz <= 0) {
-            throw new IllegalArgumentException(
-                "Scale values must be positive and finite."
-            );
+        if (!Double.isFinite(sx)
+                || !Double.isFinite(sy)
+                || !Double.isFinite(sz)
+                || sx <= 0
+                || sy <= 0
+                || sz <= 0) {
+            throw new IllegalArgumentException("Scale values must be positive and finite.");
         }
 
         scaleX *= sx;
@@ -133,9 +111,7 @@ public class TriangleMesh3D implements SurfaceMesh {
     @Override
     public void rotateX(double angle) {
         if (!Double.isFinite(angle)) {
-            throw new IllegalArgumentException(
-                "Rotation angle must be finite."
-            );
+            throw new IllegalArgumentException("Rotation angle must be finite.");
         }
 
         rotationX += angle;
@@ -144,9 +120,7 @@ public class TriangleMesh3D implements SurfaceMesh {
     @Override
     public void rotateY(double angle) {
         if (!Double.isFinite(angle)) {
-            throw new IllegalArgumentException(
-                "Rotation angle must be finite."
-            );
+            throw new IllegalArgumentException("Rotation angle must be finite.");
         }
 
         rotationY += angle;
@@ -155,9 +129,7 @@ public class TriangleMesh3D implements SurfaceMesh {
     @Override
     public void rotateZ(double angle) {
         if (!Double.isFinite(angle)) {
-            throw new IllegalArgumentException(
-                "Rotation angle must be finite."
-            );
+            throw new IllegalArgumentException("Rotation angle must be finite.");
         }
 
         rotationZ += angle;
@@ -165,25 +137,20 @@ public class TriangleMesh3D implements SurfaceMesh {
 
     private Point3D transformPoint(Point3D point) {
 
-        double[][] toOrigin = Transform3D.translation(
-            -center.getX(),
-            -center.getY(),
-            -center.getZ()
-        );
+        double[][] toOrigin =
+                Transform3D.translation(-center.getX(), -center.getY(), -center.getZ());
 
-        double[][] scaling = Transform3D.scaling(
-            scaleX, scaleY, scaleZ
-        );
+        double[][] scaling = Transform3D.scaling(scaleX, scaleY, scaleZ);
 
         double[][] rx = Transform3D.rotationX(rotationX);
         double[][] ry = Transform3D.rotationY(rotationY);
         double[][] rz = Transform3D.rotationZ(rotationZ);
 
-        double[][] toPosition = Transform3D.translation(
-            center.getX() + translationX,
-            center.getY() + translationY,
-            center.getZ() + translationZ
-        );
+        double[][] toPosition =
+                Transform3D.translation(
+                        center.getX() + translationX,
+                        center.getY() + translationY,
+                        center.getZ() + translationZ);
 
         Point3D transformed = Transform3D.apply(point, toOrigin);
         transformed = Transform3D.apply(transformed, scaling);
@@ -199,22 +166,18 @@ public class TriangleMesh3D implements SurfaceMesh {
     public void draw(BufferedImage buffer, Color color) {
 
         if (buffer == null || color == null) {
-            throw new IllegalArgumentException(
-                "Buffer and color cannot be null."
-            );
+            throw new IllegalArgumentException("Buffer and color cannot be null.");
         }
 
         int rows = vertices.length;
         int columns = vertices[0].length;
 
-        Point3D[][] transformedVertices =
-            new Point3D[rows][columns];
+        Point3D[][] transformedVertices = new Point3D[rows][columns];
 
         // Transform all vertices.
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                transformedVertices[i][j] =
-                    transformPoint(vertices[i][j]);
+                transformedVertices[i][j] = transformPoint(vertices[i][j]);
             }
         }
 
@@ -224,20 +187,18 @@ public class TriangleMesh3D implements SurfaceMesh {
 
                 if (j < columns - 1) {
                     line.draw(
-                        buffer,
-                        transformedVertices[i][j],
-                        transformedVertices[i][j + 1],
-                        color
-                    );
+                            buffer,
+                            transformedVertices[i][j],
+                            transformedVertices[i][j + 1],
+                            color);
                 }
 
                 if (i < rows - 1) {
                     line.draw(
-                        buffer,
-                        transformedVertices[i][j],
-                        transformedVertices[i + 1][j],
-                        color
-                    );
+                            buffer,
+                            transformedVertices[i][j],
+                            transformedVertices[i + 1][j],
+                            color);
                 }
             }
         }
@@ -247,13 +208,87 @@ public class TriangleMesh3D implements SurfaceMesh {
             for (int j = 0; j < columns - 1; j++) {
 
                 line.draw(
-                    buffer,
-                    transformedVertices[i][j],
-                    transformedVertices[i + 1][j + 1],
-                    color
-                );
+                        buffer,
+                        transformedVertices[i][j],
+                        transformedVertices[i + 1][j + 1],
+                        color);
             }
         }
     }
-}
 
+    /**
+     * Draws the triangular mesh using a rainbow color gradient.
+     *
+     * @param buffer image where the mesh will be drawn
+     */
+    @Override
+    public void drawRainbow(BufferedImage buffer) {
+        if (buffer == null) {
+            throw new IllegalArgumentException("Buffer cannot be null.");
+        }
+
+        int rows = vertices.length;
+        int columns = vertices[0].length;
+
+        Point3D[][] transformedVertices = new Point3D[rows][columns];
+
+        // Transform all vertices first.
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                transformedVertices[i][j] = transformPoint(vertices[i][j]);
+            }
+        }
+
+        // Draw horizontal, vertical and diagonal edges.
+        for (int i = 0; i < rows; i++) {
+            double fraction = (double) i / (rows - 1);
+            Color color = rainbowColor(fraction);
+
+            for (int j = 0; j < columns; j++) {
+
+                // Horizontal edge.
+                if (j + 1 < columns) {
+                    line.draw(
+                            buffer,
+                            transformedVertices[i][j],
+                            transformedVertices[i][j + 1],
+                            color);
+                }
+
+                if (i + 1 < rows) {
+                    double nextFraction = (double) (i + 1) / (rows - 1);
+
+                    Color nextColor = rainbowColor((fraction + nextFraction) / 2.0);
+
+                    // Vertical edge.
+                    line.draw(
+                            buffer,
+                            transformedVertices[i][j],
+                            transformedVertices[i + 1][j],
+                            nextColor);
+
+                    // Diagonal edge.
+                    if (j + 1 < columns) {
+                        line.draw(
+                                buffer,
+                                transformedVertices[i][j],
+                                transformedVertices[i + 1][j + 1],
+                                nextColor);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Generates a rainbow color for a normalized position.
+     *
+     * @param fraction position between 0.0 and 1.0
+     * @return corresponding rainbow color
+     */
+    private Color rainbowColor(double fraction) {
+        float hue = (float) (0.85 * (1.0 - fraction));
+
+        return Color.getHSBColor(hue, 1.0f, 1.0f);
+    }
+}

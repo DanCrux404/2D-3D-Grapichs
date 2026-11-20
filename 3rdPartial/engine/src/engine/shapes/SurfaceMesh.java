@@ -16,5 +16,8 @@ public interface SurfaceMesh {
     void rotateZ(double angle);
 
     void draw(BufferedImage buffer, Color color);
-}
 
+    default void drawRainbow(BufferedImage buffer) {
+        draw(buffer, Color.BLUE);
+    }
+}

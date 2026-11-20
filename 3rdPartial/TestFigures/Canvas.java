@@ -3,12 +3,12 @@ import engine.shapes.Cube;
 import engine.shapes.ExplicitCurve3D;
 import engine.shapes.ExplicitSurface3D;
 import engine.shapes.Line3D;
+import engine.shapes.MeshType;
 import engine.shapes.ParametricCurve3D;
 import engine.shapes.ParametricSurface3D;
 import engine.transform.ParallelProjection;
 import engine.transform.PerspectiveProjection;
 import engine.transform.Transform3D;
-import engine.shapes.MeshType;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -76,9 +76,12 @@ public class Canvas {
         // Automatic rotation:
         // testExplicitCurveAutomatic();
         // testParametricCurveKeyboard();
-        //testParametricCurveAutomatic();
-        //testExplicitSurface();
-        testParametricSurface();
+        // testParametricCurveAutomatic();
+        // testExplicitSurface();
+        // testParametricSurface();
+        setupCylinder();
+        redrawCylinderScene();
+        animateCylinder();
         configureFrame();
         // configureKeyBindings();
     }
@@ -615,5 +618,54 @@ public class Canvas {
         bindSurfaceRotationKey("E", "Z", -5, true);
 
         redrawParametricSurfaceScene();
+    }
+
+    private ParametricSurface3D cylinder;
+
+    private void setupCylinder() {
+        PerspectiveProjection projection = new PerspectiveProjection(400, 300, -500);
+
+        cylinder =
+                new ParametricSurface3D(
+                        (s, t) -> 50 * (2 + Math.cos(s)) * Math.cos(t),
+                        (s, t) -> 50 * (2 + Math.cos(s)) * Math.sin(t),
+                        (s, t) -> 50 * s,
+                        0,
+                        2 * Math.PI,
+                        0,
+                        2 * Math.PI,
+                        60,
+                        60,
+                        projection,
+                        MeshType.TRIANGULAR);
+
+        // Colocamos la figura en el centro del Canvas.
+        cylinder.translate(400, 300, 40);
+
+        // Orientamos su eje longitudinal verticalmente.
+        cylinder.rotateX(90);
+    }
+
+    private void redrawCylinderScene() {
+        Graphics2D g = buffer.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
+        g.dispose();
+
+        cylinder.drawRainbow(buffer);
+
+        panel.repaint();
+    }
+
+    private void animateCylinder() {
+        Timer timer =
+                new Timer(
+                        16,
+                        e -> {
+                            cylinder.rotateY(1);
+                            redrawCylinderScene();
+                        });
+
+        timer.start();
     }
 }
