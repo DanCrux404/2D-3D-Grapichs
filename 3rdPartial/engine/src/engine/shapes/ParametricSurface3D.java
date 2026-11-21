@@ -1,6 +1,7 @@
 package engine.shapes;
 
 import engine.core.Point3D;
+import engine.raster.Rasterizer;
 import engine.transform.Projection3D;
 
 import java.awt.Color;
@@ -153,6 +154,18 @@ public class ParametricSurface3D {
 
     public void draw(BufferedImage buffer, Color color) {
         mesh.draw(buffer, color);
+    }
+
+    /**
+     * Draws the parametric surface using Z-buffer visibility.
+     *
+     * @param buffer image where the surface will be drawn
+     * @param color surface color
+     * @param rasterizer depth-aware rasterizer
+     */
+    public void draw(BufferedImage buffer, Color color, Rasterizer rasterizer) {
+
+        mesh.draw(buffer, color, rasterizer);
     }
 
     /**

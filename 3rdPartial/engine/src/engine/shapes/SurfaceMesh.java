@@ -1,4 +1,7 @@
+
 package engine.shapes;
+
+import engine.raster.Rasterizer;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -17,6 +20,22 @@ public interface SurfaceMesh {
 
     void draw(BufferedImage buffer, Color color);
 
+    /**
+     * Draws the mesh using depth-aware triangle rasterization.
+     *
+     * @param buffer image where the mesh will be drawn
+     * @param color surface color
+     * @param rasterizer depth-aware rasterizer
+     */
+    default void draw(
+            BufferedImage buffer,
+            Color color,
+            Rasterizer rasterizer) {
+
+        throw new UnsupportedOperationException(
+                "This mesh does not support Z-buffer rendering yet.");
+    }
+
     default void drawRainbow(BufferedImage buffer) {
         draw(buffer, Color.BLUE);
     }
@@ -28,11 +47,17 @@ public interface SurfaceMesh {
      * @param startColor initial gradient color
      * @param endColor final gradient color
      */
-    default void drawGradient(BufferedImage buffer, Color startColor, Color endColor) {
+    default void drawGradient(
+            BufferedImage buffer,
+            Color startColor,
+            Color endColor) {
+
         if (startColor == null || endColor == null) {
-            throw new IllegalArgumentException("Gradient colors cannot be null.");
+            throw new IllegalArgumentException(
+                    "Gradient colors cannot be null.");
         }
 
         draw(buffer, startColor);
     }
 }
+

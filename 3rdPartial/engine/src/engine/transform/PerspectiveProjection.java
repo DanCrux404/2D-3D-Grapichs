@@ -1,6 +1,7 @@
 package engine.transform;
 
 import engine.core.Point3D;
+import engine.core.ProjectedPoint;
 
 /**
  * Performs perspective projection of three-dimensional points onto the XY plane.
@@ -10,7 +11,7 @@ import engine.core.Point3D;
  * <p>The projected point is obtained by finding the intersection between the line from the center
  * of projection to the 3D point and the projection plane (z = 0).
  */
-public class PerspectiveProjection implements Projection3D{
+public class PerspectiveProjection implements Projection3D {
 
     private final double xc;
     private final double yc;
@@ -77,5 +78,31 @@ public class PerspectiveProjection implements Projection3D{
 
     public double getZc() {
         return zc;
+    }
+
+    @Override
+    public ProjectedPoint projectWithDepth(Point3D point) {
+        if (point == null) {
+            throw new IllegalArgumentException("Point cannot be null");
+        }
+
+        double denominator = point.getZ() - zc;
+
+        if (denominator == 0.0) {
+            throw new IllegalArgumentException("Point cannot be projected from the camera center");
+        }
+
+        if (denominator < 0.0) {
+            throw new IllegalArgumentException("Point is behind the camera");
+        }
+
+        double u = -zc / denominator;
+
+        double x = xc + (point.getX() - xc) * u;
+        double y = yc + (point.getY() - yc) * u;
+
+        double depth = 1.0 / denominator;
+
+        return new ProjectedPoint(x, y, depth);
     }
 }

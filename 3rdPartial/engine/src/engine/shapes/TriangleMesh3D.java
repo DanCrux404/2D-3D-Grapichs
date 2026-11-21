@@ -1,6 +1,8 @@
 package engine.shapes;
 
 import engine.core.Point3D;
+import engine.core.ProjectedPoint;
+import engine.raster.Rasterizer;
 import engine.transform.Projection3D;
 import engine.transform.Transform3D;
 import engine.util.ColorUtils;
@@ -13,6 +15,7 @@ public class TriangleMesh3D implements SurfaceMesh {
     private final Point3D[][] vertices;
     private final Point3D center;
     private final Line3D line;
+    private final Projection3D projection;
 
     private double translationX = 0.0;
     private double translationY = 0.0;
@@ -78,7 +81,7 @@ public class TriangleMesh3D implements SurfaceMesh {
         }
 
         center = new Point3D((minX + maxX) / 2.0, (minY + maxY) / 2.0, (minZ + maxZ) / 2.0);
-
+        this.projection = projection;
         line = new Line3D(projection);
     }
 
@@ -218,6 +221,62 @@ public class TriangleMesh3D implements SurfaceMesh {
     }
 
     /**
+     * Draws the triangular surface using depth-aware rasterization.
+     *
+     * <p>Each mesh cell is divided into two triangles, following the same diagonal used by the
+     * traditional wireframe rendering.
+     *
+     * @param buffer image where the surface will be drawn
+     * @param color surface color
+     * @param rasterizer depth-aware rasterizer
+     */
+    @Override
+    public void draw(BufferedImage buffer, Color color, Rasterizer rasterizer) {
+
+        if (buffer == null || color == null || rasterizer == null) {
+            throw new IllegalArgumentException("Buffer, color and rasterizer cannot be null.");
+        }
+
+        int rows = vertices.length;
+        int columns = vertices[0].length;
+
+        // Transform all vertices.
+        Point3D[][] transformedVertices = new Point3D[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                transformedVertices[i][j] = transformPoint(vertices[i][j]);
+            }
+        }
+
+        // Project all vertices while preserving their depth.
+        ProjectedPoint[][] projectedVertices = new ProjectedPoint[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                projectedVertices[i][j] = projection.projectWithDepth(transformedVertices[i][j]);
+            }
+        }
+
+        // Fill each cell using two triangles.
+        for (int i = 0; i < rows - 1; i++) {
+            for (int j = 0; j < columns - 1; j++) {
+
+                ProjectedPoint p1 = projectedVertices[i][j];
+                ProjectedPoint p2 = projectedVertices[i][j + 1];
+                ProjectedPoint p3 = projectedVertices[i + 1][j + 1];
+                ProjectedPoint p4 = projectedVertices[i + 1][j];
+
+                // First triangle.
+                rasterizer.fillTriangle(buffer, p1, p2, p3, color);
+
+                // Second triangle.
+                rasterizer.fillTriangle(buffer, p1, p3, p4, color);
+            }
+        }
+    }
+
+    /**
      * Draws the triangular mesh using a rainbow color gradient.
      *
      * @param buffer image where the mesh will be drawn
@@ -243,7 +302,8 @@ public class TriangleMesh3D implements SurfaceMesh {
         // Draw horizontal, vertical and diagonal edges.
         for (int i = 0; i < rows; i++) {
             double fraction = (double) i / (rows - 1);
-            Color color = ColorUtils.rainbow(fraction);;
+            Color color = ColorUtils.rainbow(fraction);
+            ;
 
             for (int j = 0; j < columns; j++) {
 
@@ -259,7 +319,8 @@ public class TriangleMesh3D implements SurfaceMesh {
                 if (i + 1 < rows) {
                     double nextFraction = (double) (i + 1) / (rows - 1);
 
-                    Color nextColor = ColorUtils.rainbow(fraction);;
+                    Color nextColor = ColorUtils.rainbow(fraction);
+                    ;
 
                     // Vertical edge.
                     line.draw(

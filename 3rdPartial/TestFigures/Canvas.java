@@ -1,4 +1,7 @@
+import engine.core.DepthBuffer;
 import engine.core.Point3D;
+import engine.core.ProjectedPoint;
+import engine.raster.Rasterizer;
 import engine.shapes.Cube;
 import engine.shapes.ExplicitCurve3D;
 import engine.shapes.ExplicitSurface3D;
@@ -8,6 +11,7 @@ import engine.shapes.ParametricCurve3D;
 import engine.shapes.ParametricSurface3D;
 import engine.transform.ParallelProjection;
 import engine.transform.PerspectiveProjection;
+import engine.transform.Projection3D;
 import engine.transform.Transform3D;
 
 import java.awt.Color;
@@ -40,6 +44,9 @@ public class Canvas {
     private Timer parametricTimer;
     private ExplicitSurface3D explicitSurface;
     private ParametricSurface3D parametricSurface;
+    private Projection3D projection;
+    private DepthBuffer depthBuffer;
+    private Rasterizer rasterizer;
 
     /** Timer responsible for the automatic cube rotation. */
     private Timer animationTimer;
@@ -61,12 +68,17 @@ public class Canvas {
                     }
                 };
 
+        projection = new ParallelProjection(1, 1, 1);
+
+        depthBuffer = new DepthBuffer(WIDTH, HEIGHT);
+        rasterizer = new Rasterizer(depthBuffer);
+
         initComponents();
         initializeBuffer();
         // drawTestLine();
         // drawTestCube();
         // drawPerspectiveLine();
-        drawPerspectiveCube();
+        // drawPerspectiveCube();
         // testCubeScaling();
         // startAnimation();
         // testScaling();
@@ -74,14 +86,23 @@ public class Canvas {
         // testExplicitCurveKeyboard();
 
         // Automatic rotation:
-        // testExplicitCurveAutomatic();
+        //testExplicitCurveAutomatic();
         // testParametricCurveKeyboard();
         // testParametricCurveAutomatic();
         // testExplicitSurface();
         // testParametricSurface();
-        //setupCylinder();
-        //redrawCylinderScene();
-        //animateCylinder();
+        // setupCylinder();
+        // redrawCylinderScene();
+        // animateCylinder();
+        // testZBuffer();
+        // testPerspectiveDepth();
+        // testParallelDepth();
+        // testRasterizerLines();
+        // testRasterizerTriangles();
+        // testCubeZBuffer();
+        // testCylinderZBuffer();
+        // testTriangularCylinder();
+        //testCurvesZBuffer();
         configureFrame();
         // configureKeyBindings();
     }
@@ -178,7 +199,7 @@ public class Canvas {
 
         perspectiveCube = new Cube(center, 20, projection);
 
-        //perspectiveCube.draw(buffer, Color.RED);
+        // perspectiveCube.draw(buffer, Color.RED);
         perspectiveCube.draw(buffer, new Color(255, 100, 40));
     }
 
@@ -670,5 +691,245 @@ public class Canvas {
                         });
 
         timer.start();
+    }
+
+    private void clearCanvas() {
+        Graphics2D g2d = buffer.createGraphics();
+
+        g2d.setColor(Color.WHITE);
+        g2d.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
+
+        g2d.dispose();
+    }
+
+    private void testZBuffer() {
+
+        DepthBuffer depthBuffer = new DepthBuffer(buffer.getWidth(), buffer.getHeight());
+
+        // Limpiar el buffer gráfico.
+        Graphics2D g2d = buffer.createGraphics();
+        g2d.setColor(Color.WHITE);
+        g2d.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
+        g2d.dispose();
+
+        int x = 400;
+        int y = 300;
+
+        depthBuffer.testAndSet(x, y, 0.2, Color.BLUE, buffer);
+
+        depthBuffer.testAndSet(x, y, 0.8, Color.RED, buffer);
+
+        depthBuffer.testAndSet(x, y, 0.5, Color.GREEN, buffer);
+
+        System.out.println("Final depth: " + depthBuffer.getDepth(x, y));
+
+        System.out.println("Final color: " + new Color(buffer.getRGB(x, y)));
+    }
+
+    private void testPerspectiveDepth() {
+
+        PerspectiveProjection projection = new PerspectiveProjection(400, 300, -500);
+
+        Point3D p1 = new Point3D(500, 350, 0);
+        Point3D p2 = new Point3D(500, 350, 200);
+        Point3D p3 = new Point3D(500, 350, 500);
+
+        ProjectedPoint a = projection.projectWithDepth(p1);
+        ProjectedPoint b = projection.projectWithDepth(p2);
+        ProjectedPoint c = projection.projectWithDepth(p3);
+
+        System.out.println("=== PERSPECTIVE PROJECTION ===");
+
+        System.out.println("P1: (" + a.getX() + ", " + a.getY() + ") depth: " + a.getDepth());
+
+        System.out.println("P2: (" + b.getX() + ", " + b.getY() + ") depth: " + b.getDepth());
+
+        System.out.println("P3: (" + c.getX() + ", " + c.getY() + ") depth: " + c.getDepth());
+    }
+
+    private void testParallelDepth() {
+
+        ParallelProjection projection = new ParallelProjection(100, 50, 100);
+
+        Point3D p1 = new Point3D(500, 350, 100);
+        Point3D p2 = new Point3D(600, 400, 200);
+        Point3D p3 = new Point3D(700, 450, 300);
+
+        ProjectedPoint a = projection.projectWithDepth(p1);
+        ProjectedPoint b = projection.projectWithDepth(p2);
+        ProjectedPoint c = projection.projectWithDepth(p3);
+
+        System.out.println("=== PARALLEL PROJECTION ===");
+
+        System.out.println("P1: (" + a.getX() + ", " + a.getY() + ") depth: " + a.getDepth());
+
+        System.out.println("P2: (" + b.getX() + ", " + b.getY() + ") depth: " + b.getDepth());
+
+        System.out.println("P3: (" + c.getX() + ", " + c.getY() + ") depth: " + c.getDepth());
+    }
+
+    private void testRasterizerLines() {
+
+        clearCanvas();
+
+        DepthBuffer depthBuffer = new DepthBuffer(buffer.getWidth(), buffer.getHeight());
+
+        Rasterizer rasterizer = new Rasterizer(depthBuffer);
+
+        // Horizontal line: farther away.
+        ProjectedPoint a = new ProjectedPoint(200, 300, 0.2);
+
+        ProjectedPoint b = new ProjectedPoint(600, 300, 0.2);
+
+        // Vertical line: closer.
+        ProjectedPoint c = new ProjectedPoint(400, 100, 0.8);
+
+        ProjectedPoint d = new ProjectedPoint(400, 500, 0.8);
+
+        rasterizer.drawLine(buffer, a, b, Color.BLUE);
+
+        rasterizer.drawLine(buffer, c, d, Color.RED);
+
+        // Draw the far line again.
+        // It must not overwrite the closer line.
+        rasterizer.drawLine(buffer, a, b, Color.GREEN);
+    }
+
+    private void testRasterizerTriangles() {
+
+        clearCanvas();
+
+        DepthBuffer depthBuffer = new DepthBuffer(buffer.getWidth(), buffer.getHeight());
+
+        Rasterizer rasterizer = new Rasterizer(depthBuffer);
+
+        // Large triangle: farther away.
+        ProjectedPoint a = new ProjectedPoint(200, 150, 0.2);
+
+        ProjectedPoint b = new ProjectedPoint(600, 150, 0.2);
+
+        ProjectedPoint c = new ProjectedPoint(400, 500, 0.2);
+
+        // Small triangle: closer and partially overlapping.
+        ProjectedPoint d = new ProjectedPoint(300, 250, 0.8);
+
+        ProjectedPoint e = new ProjectedPoint(500, 250, 0.8);
+
+        ProjectedPoint f = new ProjectedPoint(400, 420, 0.8);
+
+        // Draw the far triangle first.
+        rasterizer.fillTriangle(buffer, a, b, c, Color.BLUE);
+
+        // Draw the closer triangle.
+        rasterizer.fillTriangle(buffer, d, e, f, Color.RED);
+
+        // Draw the far triangle again.
+        // It must not overwrite the closer triangle.
+        rasterizer.fillTriangle(buffer, a, b, c, Color.GREEN);
+
+        System.out.println("Outside triangle: " + new Color(buffer.getRGB(100, 100)));
+
+        System.out.println("Inside overlap: " + new Color(buffer.getRGB(400, 300)));
+
+        System.out.println("Inside large triangle: " + new Color(buffer.getRGB(250, 200)));
+    }
+
+    private void testCubeZBuffer() {
+
+        DepthBuffer depthBuffer = new DepthBuffer(buffer.getWidth(), buffer.getHeight());
+
+        Rasterizer rasterizer = new Rasterizer(depthBuffer);
+
+        PerspectiveProjection projection = new PerspectiveProjection(400, 300, -500);
+
+        Cube cube = new Cube(new Point3D(400, 300, 200), 20, projection);
+
+        cube.rotateX(25);
+        cube.rotateY(35);
+
+        clearCanvas();
+        depthBuffer.clear();
+
+        cube.draw(buffer, Color.BLUE, rasterizer);
+    }
+
+    private void testCylinderZBuffer() {
+
+        DepthBuffer depthBuffer = new DepthBuffer(buffer.getWidth(), buffer.getHeight());
+
+        Rasterizer rasterizer = new Rasterizer(depthBuffer);
+
+        PerspectiveProjection projection = new PerspectiveProjection(400, 300, -500);
+
+        ParametricSurface3D cylinder =
+                new ParametricSurface3D(
+                        (s, t) -> 50 * Math.cos(t),
+                        (s, t) -> 50 * Math.sin(t),
+                        (s, t) -> 50 * s,
+                        0,
+                        2 * Math.PI,
+                        0,
+                        2 * Math.PI,
+                        60,
+                        60,
+                        projection,
+                        MeshType.RECTANGULAR);
+
+        cylinder.translate(400, 300, 200);
+        cylinder.rotateX(90);
+
+        clearCanvas();
+        depthBuffer.clear();
+
+        cylinder.draw(buffer, Color.BLUE, rasterizer);
+    }
+
+    private void testTriangularCylinder() {
+        ParametricSurface3D cylinder =
+                new ParametricSurface3D(
+                        (s, t) -> 50 * Math.cos(t),
+                        (s, t) -> 50 * Math.sin(t),
+                        (s, t) -> 50 * s,
+                        0,
+                        2 * Math.PI,
+                        0,
+                        2 * Math.PI,
+                        60,
+                        60,
+                        projection,
+                        MeshType.TRIANGULAR);
+
+        cylinder.translate(757, 657, 200);
+
+        cylinder.draw(buffer, Color.BLUE, rasterizer);
+    }
+
+    private void testCurvesZBuffer() {
+
+        // Explicit curve: y = f(x)
+        ExplicitCurve3D explicitCurve =
+                new ExplicitCurve3D(x -> 40 * Math.sin(x), -100, 100, 500, projection);
+
+        // Position it on the left side.
+        explicitCurve.translate(450, 500, 200);
+        explicitCurve.rotateY(45);
+
+        // Parametric curve: 3D helix
+        ParametricCurve3D parametricCurve =
+                new ParametricCurve3D(
+                        t -> 40 * Math.cos(t),
+                        t -> 40 * Math.sin(t),
+                        t -> 10 * t,
+                        0,
+                        8 * Math.PI,
+                        500,
+                        projection);
+
+        // Position it on the right side.
+        parametricCurve.translate(925.66, 625.66, 200);
+
+        // Draw both curves using Z-Buffer.
+        explicitCurve.draw(buffer, Color.BLUE, rasterizer);
+        parametricCurve.draw(buffer, Color.RED, rasterizer);
     }
 }

@@ -1,6 +1,7 @@
 package engine.transform;
 
 import engine.core.Point3D;
+import engine.core.ProjectedPoint;
 
 /**
  * Performs parallel projection of three-dimensional points onto the XY plane.
@@ -104,5 +105,21 @@ public class ParallelProjection implements Projection3D {
      */
     public double getZp() {
         return zp;
+    }
+
+    @Override
+    public ProjectedPoint projectWithDepth(Point3D point) {
+        if (point == null) {
+            throw new IllegalArgumentException("Point cannot be null");
+        }
+
+        double parameter = point.getZ() / zp;
+
+        double x = point.getX() - xp * parameter;
+        double y = point.getY() - yp * parameter;
+
+        double depth = -Math.abs(parameter);
+
+        return new ProjectedPoint(x, y, depth);
     }
 }

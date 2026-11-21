@@ -1,6 +1,7 @@
 package engine.transform;
 
 import engine.core.Point3D;
+import engine.core.ProjectedPoint;
 
 /** Defines the behavior of a three-dimensional projection. */
 public interface Projection3D {
@@ -12,4 +13,5 @@ public interface Projection3D {
      * @return the projected 2D point
      */
     Point2D project(Point3D point);
+    ProjectedPoint projectWithDepth(Point3D point);
 }

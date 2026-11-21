@@ -1,6 +1,8 @@
 package engine.shapes;
 
 import engine.core.Point3D;
+import engine.core.ProjectedPoint;
+import engine.raster.Rasterizer;
 import engine.transform.Projection3D;
 import engine.transform.Transform3D;
 
@@ -15,6 +17,7 @@ public class ParametricCurve3D {
     private final List<Point3D> points;
     private final Point3D center;
     private final Line3D line;
+    private final Projection3D projection;
 
     private double translationX = 0.0;
     private double translationY = 0.0;
@@ -94,6 +97,7 @@ public class ParametricCurve3D {
         // Calculate center
         center = new Point3D((minX + maxX) / 2.0, (minY + maxY) / 2.0, (minZ + maxZ) / 2.0);
 
+        this.projection = projection;
         // Initialize Line3D
         line = new Line3D(projection);
     }
@@ -196,6 +200,33 @@ public class ParametricCurve3D {
             Point3D p2 = transformedPoints.get(i + 1);
 
             line.draw(buffer, p1, p2, color);
+        }
+    }
+
+    /**
+     * Draws the parametric curve using depth-aware rasterization.
+     *
+     * @param buffer destination image
+     * @param color line color
+     * @param rasterizer depth-aware rasterizer
+     */
+    public void draw(BufferedImage buffer, Color color, Rasterizer rasterizer) {
+
+        if (buffer == null || color == null || rasterizer == null) {
+            throw new IllegalArgumentException("Buffer, color and rasterizer cannot be null.");
+        }
+
+        List<ProjectedPoint> projectedPoints = new ArrayList<>();
+
+        for (Point3D point : points) {
+            Point3D transformed = transformPoint(point);
+
+            projectedPoints.add(projection.projectWithDepth(transformed));
+        }
+
+        for (int i = 0; i < projectedPoints.size() - 1; i++) {
+
+            rasterizer.drawLine(buffer, projectedPoints.get(i), projectedPoints.get(i + 1), color);
         }
     }
 }

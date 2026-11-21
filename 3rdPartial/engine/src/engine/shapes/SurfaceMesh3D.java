@@ -1,6 +1,8 @@
 package engine.shapes;
 
 import engine.core.Point3D;
+import engine.core.ProjectedPoint;
+import engine.raster.Rasterizer;
 import engine.transform.Projection3D;
 import engine.transform.Transform3D;
 import engine.util.ColorUtils;
@@ -13,6 +15,8 @@ public class SurfaceMesh3D implements SurfaceMesh {
     private final Point3D[][] vertices;
     private final Point3D center;
     private final Line3D line;
+    private final Projection3D projection;
+
     private double translationX = 0.0;
     private double translationY = 0.0;
     private double translationZ = 0.0;
@@ -26,6 +30,7 @@ public class SurfaceMesh3D implements SurfaceMesh {
     private double rotationZ = 0.0;
 
     public SurfaceMesh3D(Point3D[][] vertices, Projection3D projection) {
+
         if (vertices == null || vertices.length < 2) {
             throw new IllegalArgumentException("A surface must have at least 2 rows.");
         }
@@ -76,57 +81,141 @@ public class SurfaceMesh3D implements SurfaceMesh {
             }
         }
 
-        center = new Point3D((minX + maxX) / 2.0, (minY + maxY) / 2.0, (minZ + maxZ) / 2.0);
+        center = new Point3D(
+                (minX + maxX) / 2.0,
+                (minY + maxY) / 2.0,
+                (minZ + maxZ) / 2.0
+        );
 
+        this.projection = projection;
         line = new Line3D(projection);
     }
 
+    /**
+     * Draws the surface as a traditional wireframe.
+     */
     @Override
     public void draw(BufferedImage buffer, Color color) {
 
-        if (buffer == null || color == null) {
-            throw new IllegalArgumentException("Buffer and color cannot be null.");
+        validateDrawingArguments(buffer, color);
+
+        Point3D[][] transformedVertices = calculateTransformedVertices();
+
+        int rows = vertices.length;
+        int columns = vertices[0].length;
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+
+                if (j < columns - 1) {
+                    line.draw(
+                            buffer,
+                            transformedVertices[i][j],
+                            transformedVertices[i][j + 1],
+                            color
+                    );
+                }
+
+                if (i < rows - 1) {
+                    line.draw(
+                            buffer,
+                            transformedVertices[i][j],
+                            transformedVertices[i + 1][j],
+                            color
+                    );
+                }
+            }
         }
+    }
+
+    /**
+     * Draws the surface as filled triangles using the Z-buffer.
+     *
+     * <p>Each quadrilateral cell is divided into two triangles. Their fragments
+     * are rendered according to their interpolated depth.
+     *
+     * @param buffer image where the surface will be drawn
+     * @param color surface color
+     * @param rasterizer depth-aware rasterizer
+     */
+    public void draw(
+            BufferedImage buffer,
+            Color color,
+            Rasterizer rasterizer) {
+
+        validateDrawingArguments(buffer, color);
+
+        if (rasterizer == null) {
+            throw new IllegalArgumentException("Rasterizer cannot be null.");
+        }
+
+        Point3D[][] transformedVertices = calculateTransformedVertices();
+
+        int rows = vertices.length;
+        int columns = vertices[0].length;
+
+        // Project all vertices while preserving their depth.
+        ProjectedPoint[][] projectedVertices =
+                new ProjectedPoint[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                projectedVertices[i][j] =
+                        projection.projectWithDepth(transformedVertices[i][j]);
+            }
+        }
+
+        // Fill every cell using two triangles.
+        for (int i = 0; i < rows - 1; i++) {
+            for (int j = 0; j < columns - 1; j++) {
+
+                ProjectedPoint p1 = projectedVertices[i][j];
+                ProjectedPoint p2 = projectedVertices[i][j + 1];
+                ProjectedPoint p3 = projectedVertices[i + 1][j + 1];
+                ProjectedPoint p4 = projectedVertices[i + 1][j];
+
+                // First triangle.
+                rasterizer.fillTriangle(
+                        buffer, p1, p2, p3, color
+                );
+
+                // Second triangle.
+                rasterizer.fillTriangle(
+                        buffer, p1, p3, p4, color
+                );
+            }
+        }
+    }
+
+    /**
+     * Calculates all vertices after applying the current transformations.
+     */
+    private Point3D[][] calculateTransformedVertices() {
 
         int rows = vertices.length;
         int columns = vertices[0].length;
 
         Point3D[][] transformedVertices = new Point3D[rows][columns];
 
-        // Transform all vertices.
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 transformedVertices[i][j] = transformPoint(vertices[i][j]);
             }
         }
 
-        // Draw the surface mesh.
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
+        return transformedVertices;
+    }
 
-                // Connect with the vertex on the right.
-                if (j < columns - 1) {
-                    line.draw(
-                            buffer,
-                            transformedVertices[i][j],
-                            transformedVertices[i][j + 1],
-                            color);
-                }
+    private void validateDrawingArguments(BufferedImage buffer, Color color) {
 
-                // Connect with the vertex below.
-                if (i < rows - 1) {
-                    line.draw(
-                            buffer,
-                            transformedVertices[i][j],
-                            transformedVertices[i + 1][j],
-                            color);
-                }
-            }
+        if (buffer == null || color == null) {
+            throw new IllegalArgumentException("Buffer and color cannot be null.");
         }
     }
 
     @Override
     public void translate(double dx, double dy, double dz) {
+
         if (!Double.isFinite(dx) || !Double.isFinite(dy) || !Double.isFinite(dz)) {
             throw new IllegalArgumentException("Translation values must be finite.");
         }
@@ -138,6 +227,7 @@ public class SurfaceMesh3D implements SurfaceMesh {
 
     @Override
     public void scale(double sx, double sy, double sz) {
+
         if (!Double.isFinite(sx)
                 || !Double.isFinite(sy)
                 || !Double.isFinite(sz)
@@ -154,6 +244,7 @@ public class SurfaceMesh3D implements SurfaceMesh {
 
     @Override
     public void rotateX(double angle) {
+
         if (!Double.isFinite(angle)) {
             throw new IllegalArgumentException("Rotation angle must be finite.");
         }
@@ -163,6 +254,7 @@ public class SurfaceMesh3D implements SurfaceMesh {
 
     @Override
     public void rotateY(double angle) {
+
         if (!Double.isFinite(angle)) {
             throw new IllegalArgumentException("Rotation angle must be finite.");
         }
@@ -172,6 +264,7 @@ public class SurfaceMesh3D implements SurfaceMesh {
 
     @Override
     public void rotateZ(double angle) {
+
         if (!Double.isFinite(angle)) {
             throw new IllegalArgumentException("Rotation angle must be finite.");
         }
@@ -181,24 +274,26 @@ public class SurfaceMesh3D implements SurfaceMesh {
 
     private Point3D transformPoint(Point3D point) {
 
-        // Move the point to the origin relative to the surface center.
         double[][] toOrigin =
-                Transform3D.translation(-center.getX(), -center.getY(), -center.getZ());
+                Transform3D.translation(
+                        -center.getX(),
+                        -center.getY(),
+                        -center.getZ()
+                );
 
-        // Apply scaling.
-        double[][] scaling = Transform3D.scaling(scaleX, scaleY, scaleZ);
+        double[][] scaling =
+                Transform3D.scaling(scaleX, scaleY, scaleZ);
 
-        // Apply rotations.
         double[][] rx = Transform3D.rotationX(rotationX);
         double[][] ry = Transform3D.rotationY(rotationY);
         double[][] rz = Transform3D.rotationZ(rotationZ);
 
-        // Move the point back to its position and apply translation.
         double[][] toPosition =
                 Transform3D.translation(
                         center.getX() + translationX,
                         center.getY() + translationY,
-                        center.getZ() + translationZ);
+                        center.getZ() + translationZ
+                );
 
         Point3D transformed = Transform3D.apply(point, toOrigin);
         transformed = Transform3D.apply(transformed, scaling);
@@ -210,26 +305,30 @@ public class SurfaceMesh3D implements SurfaceMesh {
         return transformed;
     }
 
+    /**
+     * Draws the wireframe using a color gradient.
+     */
     @Override
-    public void drawGradient(BufferedImage buffer, Color startColor, Color endColor) {
+    public void drawGradient(
+            BufferedImage buffer,
+            Color startColor,
+            Color endColor) {
+
         if (buffer == null || startColor == null || endColor == null) {
             throw new IllegalArgumentException("Buffer and colors cannot be null.");
         }
 
+        Point3D[][] transformedVertices = calculateTransformedVertices();
+
         int rows = vertices.length;
         int columns = vertices[0].length;
 
-        Point3D[][] transformedVertices = new Point3D[rows][columns];
-
         for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                transformedVertices[i][j] = transformPoint(vertices[i][j]);
-            }
-        }
 
-        for (int i = 0; i < rows; i++) {
             double fraction = (double) i / (rows - 1);
-            Color color = ColorUtils.interpolate(startColor, endColor, fraction);
+            Color color = ColorUtils.interpolate(
+                    startColor, endColor, fraction
+            );
 
             for (int j = 0; j < columns; j++) {
 
@@ -238,21 +337,20 @@ public class SurfaceMesh3D implements SurfaceMesh {
                             buffer,
                             transformedVertices[i][j],
                             transformedVertices[i][j + 1],
-                            color);
+                            color
+                    );
                 }
 
                 if (i + 1 < rows) {
-                    Color nextColor = ColorUtils.interpolate(startColor, endColor, fraction);
-
-                    Color middleColor = ColorUtils.interpolate(startColor, endColor, fraction);
-
                     line.draw(
                             buffer,
                             transformedVertices[i][j],
                             transformedVertices[i + 1][j],
-                            middleColor);
+                            color
+                    );
                 }
             }
         }
     }
 }
+
