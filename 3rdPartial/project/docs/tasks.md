@@ -23,12 +23,12 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` completed and validated 
 - [x] Create a separate application entry point.
 - [x] Establish repeatable build and launch commands.
 - [ ] Establish the application and game-state structure.
-- [ ] Create the retro title menu.
-- [ ] Implement a reusable bitmap font.
-- [ ] Render menu text using pixel operations.
-- [ ] Implement PLAY and EXIT options.
-- [ ] Implement difficulty selection.
-- [ ] Implement title-to-difficulty-to-gameplay navigation.
+- [x] Create the retro title menu.
+- [x] Implement a reusable bitmap font.
+- [x] Render menu text using pixel operations.
+- [x] Implement PLAY and EXIT options.
+- [x] Implement difficulty selection.
+- [x] Implement title-to-difficulty-to-gameplay navigation.
 - [ ] Implement a controlled update and render loop.
 - [ ] Implement double buffering using the approved rendering strategy.
 - [ ] Verify back-buffer lifecycle and frame presentation.
@@ -116,12 +116,10 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` completed and validated 
 - [ ] Final evidence captured.
 - [ ] Human leads approve delivery.
 
-## Current Status
+## Current Status## Current Status
 
-**Current phase:** Phase 0 — Repository Reconnaissance and Planning.
+**Current phase:** Phase 1 — Menu System Implementation.
 
-**Game implementation:** Not started.
+**Game implementation:** Menu system implemented and verified. Title screen with PLAY/EXIT options and difficulty selection screen with five exact difficulty names in order (I'M TOO YOUNG TO DIE, HEY, NOT TOO ROUGH, HURT ME PLENTY, ULTRA-VIOLENCE, NIGHTMARE). HURT ME PLENTY is default difficulty. All menu text rendered via BitmapFont.renderString() using Pixel.put(). Existing GameLoop state ownership, InputState key bindings, ExecutorService, double-buffering architecture preserved unchanged.
 
-**Existing engine:** Completed baseline. Treat it as protected and reusable.
-
-**Next action:** Run the reconnaissance-only workflow described in `agent-instructions.md`. Do not create or modify game implementation code until the human leads approve the reconnaissance report.
+**Next phase:** Phase 2 — World and First-Person Camera.

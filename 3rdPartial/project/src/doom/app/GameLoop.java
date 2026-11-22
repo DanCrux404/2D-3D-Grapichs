@@ -8,6 +8,9 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import doom.app.state.GameState;
+import doom.app.font.BitmapFont;
+import doom.app.difficulty.Difficulty;
 
 /**
  * Game loop executed on the application's single-thread executor.
@@ -70,6 +73,21 @@ public final class GameLoop implements Runnable {
     private double colorPhase;
     private int confirmFlashFrames;
 
+    /** Title screen selection: 0=PLAY, 1=EXIT. */
+    private int titleSelection = 0;
+
+    /** Difficulty selection index: 0=I'M TOO YOUNG TO DIE, 1=HEY, NOT TOO ROUGH, 2=HURT ME PLENTY, 3=ULTRA-VIOLENCE, 4=NIGHTMARE. */
+    private int difficultySelection = 2;
+
+    /** Bitmap font for rendering menu text. */
+    private BitmapFont font;
+
+    /** The difficulty selected during DIFFICULTY state; passed into PLAYING. */
+    private Difficulty selectedDifficulty = Difficulty.HURT_ME_PLENTY;
+
+    /** Current game state machine. */
+    private volatile GameState currentGameState = GameState.TITLE;
+
     /**
      * @param presenter double-buffered frame publisher
      * @param input shared keyboard state
@@ -84,6 +102,8 @@ public final class GameLoop implements Runnable {
         this.input = input;
         this.shutdownRequest = shutdownRequest;
         this.fatalErrorHandler = fatalErrorHandler;
+        this.font = new BitmapFont();
+
     }
 
     /** Requests a clean stop; safe to call from any thread, idempotent by nature. */
@@ -165,55 +185,47 @@ public final class GameLoop implements Runnable {
         }
     }
 
-    /** Updates the temporary animation; game-loop thread only. */
+    /** Updates the game state each frame; game-loop thread only. */
     private void update(double dt, InputState.Snapshot keys, int width, int height) {
-        double moveX = 0.0;
-        double moveY = 0.0;
-        if (keys.isDown(InputState.Key.LEFT)) {
-            moveX -= 1.0;
-        }
-        if (keys.isDown(InputState.Key.RIGHT)) {
-            moveX += 1.0;
-        }
-        if (keys.isDown(InputState.Key.UP)) {
-            moveY -= 1.0;
-        }
-        if (keys.isDown(InputState.Key.DOWN)) {
-            moveY += 1.0;
+        // dt validation
+        if (dt < 0.0) {
+            dt = 0.0;
         }
 
-        if (moveX != 0.0 || moveY != 0.0) {
-            // Continuous held-key movement; diagonal input is normalized.
-            double length = Math.hypot(moveX, moveY);
-            x += (moveX / length) * MOVE_SPEED * dt;
-            y += (moveY / length) * MOVE_SPEED * dt;
-        } else {
-            // Idle drift so consecutive frames differ even without input (stress test).
-            x += vx * dt;
-            y += vy * dt;
-        }
-
-        double maxX = width - RECT_SIZE;
-        double maxY = height - RECT_SIZE;
-        if (x <= 0.0) {
-            x = 0.0;
-            vx = Math.abs(vx);
-        } else if (x >= maxX) {
-            x = maxX;
-            vx = -Math.abs(vx);
-        }
-        if (y <= 0.0) {
-            y = 0.0;
-            vy = Math.abs(vy);
-        } else if (y >= maxY) {
-            y = maxY;
-            vy = -Math.abs(vy);
-        }
-
-        // Continuous colour cycling through the existing engine helper (4 s per cycle).
-        colorPhase += dt * 0.25;
-        if (colorPhase >= 1.0) {
-            colorPhase -= 1.0;
+        // Handle menu navigation and state transitions
+        if (currentGameState == GameState.TITLE) {
+            // UP/DOWN navigation of title selection
+            if (keys.wasPressed(InputState.Key.UP)) {
+                titleSelection = (titleSelection - 1 + 2) % 2;
+            }
+            if (keys.wasPressed(InputState.Key.DOWN)) {
+                titleSelection = (titleSelection + 1) % 2;
+            }
+            // ENTER confirmation: PLAY -> DIFFICULTY, EXIT -> shutdown
+            if (keys.wasPressed(InputState.Key.CONFIRM)) {
+                if (titleSelection == 0) {
+                    // PLAY selected -> transition to DIFFICULTY
+                    currentGameState = GameState.DIFFICULTY;
+                    titleSelection = 0;
+                } else {
+                    // EXIT selected -> request shutdown via existing mechanism
+                    stopRequested = true;
+                    shutdownRequest.run();
+                }
+            }
+        } else if (currentGameState == GameState.DIFFICULTY) {
+            // UP/DOWN circular navigation of difficulty selection
+            if (keys.wasPressed(InputState.Key.UP)) {
+                difficultySelection = (difficultySelection - 1 + 5) % 5;
+            }
+            if (keys.wasPressed(InputState.Key.DOWN)) {
+                difficultySelection = (difficultySelection + 1) % 5;
+            }
+            // ENTER confirmation: select difficulty and start playing
+            if (keys.wasPressed(InputState.Key.CONFIRM)) {
+                selectedDifficulty = Difficulty.values()[difficultySelection];
+                currentGameState = GameState.PLAYING;
+            }
         }
 
         applyOneTimeActions(keys, width, height);
@@ -223,32 +235,50 @@ public final class GameLoop implements Runnable {
         }
     }
 
-    /** One-shot input reactions: ENTER re-centres with a flash, ESC requests shutdown. */
+    /** One-shot input reactions.
+     * <p>State transitions are primarily handled in {@link #update(double, InputState.Snapshot, int, int)}.
+     * This method handles ESC for BACK from DIFFICULTY→TITLE.</p>
+     */
     private void applyOneTimeActions(InputState.Snapshot keys, int width, int height) {
-        if (keys.wasPressed(InputState.Key.CONFIRM)) {
-            x = (width - RECT_SIZE) / 2.0;
-            y = (height - RECT_SIZE) / 2.0;
-            confirmFlashFrames = 15;
-            System.out.println("[GameLoop] ENTER test action — rectangle recentered at ("
-                    + (int) x + ", " + (int) y + ")");
-        }
-        if (keys.wasPressed(InputState.Key.BACK)) {
-            System.out.println("[GameLoop] ESC pressed — requesting clean shutdown");
-            stopRequested = true;
-            shutdownRequest.run();
+        if (currentGameState == GameState.TITLE) {
+            if (keys.wasPressed(InputState.Key.BACK)) {
+                System.out.println("[GameLoop] ESC pressed — requesting clean shutdown");
+                stopRequested = true;
+                shutdownRequest.run();
+            }
+        } else if (currentGameState == GameState.DIFFICULTY) {
+            if (keys.wasPressed(InputState.Key.BACK)) {
+                currentGameState = GameState.TITLE;
+            }
         }
     }
 
     /** Draws the temporary animation into the back buffer; game-loop thread only. */
     private void render(BufferedImage back) {
-        int ix = (int) Math.round(x);
-        int iy = (int) Math.round(y);
-
-        Color color = confirmFlashFrames > 0
-                ? Color.WHITE
-                : ColorUtils.rainbow(colorPhase);
-
-        Rectangle.draw(back, ix, iy, ix + RECT_SIZE - 1, iy + RECT_SIZE - 1, color);
+        // Render based on current game state
+        if (currentGameState == GameState.TITLE) {
+            // Render title screen
+            font.renderString(back, 100, 100, "PROJECT DOOM", Color.WHITE, 3);
+            font.renderString(back, 100, 200, "PLAY", titleSelection == 0 ? Color.WHITE : Color.LIGHT_GRAY, 2);
+            font.renderString(back, 100, 250, "EXIT", titleSelection == 1 ? Color.WHITE : Color.LIGHT_GRAY, 2);
+        } else if (currentGameState == GameState.DIFFICULTY) {
+            // Render difficulty selection screen
+            String[] difficulties = {
+                "I'M TOO YOUNG TO DIE",
+                "HEY, NOT TOO ROUGH",
+                "HURT ME PLENTY",
+                "ULTRA-VIOLENCE",
+                "NIGHTMARE"
+            };
+            for (int i = 0; i < difficulties.length; i++) {
+                int y = 100 + i * 40;
+                if (i == difficultySelection) {
+                    font.renderString(back, 100, y, difficulties[i], Color.WHITE, 2);
+                } else {
+                    font.renderString(back, 100, y, difficulties[i], Color.LIGHT_GRAY, 2);
+                }
+            }
+        }
 
         // Static outline: any torn, stale, or uncleared frame shows up immediately.
         Rectangle.draw(back, 2, 2, back.getWidth() - 3, back.getHeight() - 3, FRAME_OUTLINE);
