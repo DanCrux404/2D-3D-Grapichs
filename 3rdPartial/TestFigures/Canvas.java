@@ -1,7 +1,12 @@
 import engine.core.DepthBuffer;
 import engine.core.Point3D;
 import engine.core.ProjectedPoint;
+import engine.lighting.Light;
+import engine.lighting.Material;
+import engine.lighting.PhongLighting;
 import engine.raster.Rasterizer;
+import engine.shadow.ShadowMap;
+import engine.shadow.ShadowRenderer;
 import engine.shapes.Cube;
 import engine.shapes.ExplicitCurve3D;
 import engine.shapes.ExplicitSurface3D;
@@ -9,6 +14,7 @@ import engine.shapes.Line3D;
 import engine.shapes.MeshType;
 import engine.shapes.ParametricCurve3D;
 import engine.shapes.ParametricSurface3D;
+import engine.shapes.TriangleMesh3D;
 import engine.transform.ParallelProjection;
 import engine.transform.PerspectiveProjection;
 import engine.transform.Projection3D;
@@ -68,8 +74,8 @@ public class Canvas {
                     }
                 };
 
-        projection = new ParallelProjection(1, 1, 1);
-
+        // projection = new ParallelProjection(1, 1, 1);
+        projection = new ParallelProjection(0.7071, 0.7071, 1);
         depthBuffer = new DepthBuffer(WIDTH, HEIGHT);
         rasterizer = new Rasterizer(depthBuffer);
 
@@ -86,7 +92,7 @@ public class Canvas {
         // testExplicitCurveKeyboard();
 
         // Automatic rotation:
-        //testExplicitCurveAutomatic();
+        // testExplicitCurveAutomatic();
         // testParametricCurveKeyboard();
         // testParametricCurveAutomatic();
         // testExplicitSurface();
@@ -102,7 +108,10 @@ public class Canvas {
         // testCubeZBuffer();
         // testCylinderZBuffer();
         // testTriangularCylinder();
-        //testCurvesZBuffer();
+        // testCurvesZBuffer();
+        // testCubeLighting();
+        // testGouraudShading();
+        testShadowMapping();
         configureFrame();
         // configureKeyBindings();
     }
@@ -931,5 +940,309 @@ public class Canvas {
         // Draw both curves using Z-Buffer.
         explicitCurve.draw(buffer, Color.BLUE, rasterizer);
         parametricCurve.draw(buffer, Color.RED, rasterizer);
+    }
+
+    private void testCubeLighting() {
+
+        clearCanvas();
+        depthBuffer.clear();
+
+        Light light = new Light(new Point3D(400, 320, 80), Color.WHITE, 1.0);
+
+        Material material = new Material(Color.BLUE, 0.3, 0.8, 0.5, 32.0);
+
+        PhongLighting lighting = new PhongLighting();
+
+        Point3D viewDirection = new Point3D(-0.7071, -0.7071, -1);
+
+        // Cube dimensions and position.
+        double left = 550;
+        double right = 650;
+
+        double top = 450;
+        double bottom = 550;
+
+        double front = 150;
+        double back = 250;
+
+        // Create the six cube faces.
+        TriangleMesh3D[] faces = {
+
+            // Left face (-X).
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, front),
+                            new Point3D(left, top, back),
+                            new Point3D(left, bottom, back),
+                            new Point3D(left, bottom, front)),
+                    projection),
+
+            // Right face (+X).
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(right, top, front),
+                            new Point3D(right, bottom, front),
+                            new Point3D(right, bottom, back),
+                            new Point3D(right, top, back)),
+                    projection),
+
+            // Top face (-Y).
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, front),
+                            new Point3D(right, top, front),
+                            new Point3D(right, top, back),
+                            new Point3D(left, top, back)),
+                    projection),
+
+            // Bottom face (+Y).
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, bottom, front),
+                            new Point3D(left, bottom, back),
+                            new Point3D(right, bottom, back),
+                            new Point3D(right, bottom, front)),
+                    projection),
+
+            // Front face (-Z).
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, front),
+                            new Point3D(left, bottom, front),
+                            new Point3D(right, bottom, front),
+                            new Point3D(right, top, front)),
+                    projection),
+
+            // Back face (+Z).
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, back),
+                            new Point3D(right, top, back),
+                            new Point3D(right, bottom, back),
+                            new Point3D(left, bottom, back)),
+                    projection)
+        };
+
+        // Draw every face using Phong illumination.
+        for (TriangleMesh3D face : faces) {
+
+            face.draw(buffer, rasterizer, light, material, lighting, viewDirection);
+        }
+    }
+
+    /** Creates a rectangular face from four vertices. */
+    private Point3D[][] createFace(Point3D p1, Point3D p2, Point3D p3, Point3D p4) {
+
+        return new Point3D[][] {
+            {p1, p2},
+            {p4, p3}
+        };
+    }
+
+    private void testGouraudShading() {
+
+        clearCanvas();
+        depthBuffer.clear();
+
+        Light light = new Light(new Point3D(400, 320, 80), Color.WHITE, 1.0);
+
+        Material material = new Material(Color.BLUE, 0.3, 0.8, 0.5, 32.0);
+
+        PhongLighting lighting = new PhongLighting();
+
+        Point3D viewDirection = new Point3D(-0.7071, -0.7071, -1);
+
+        // Cube dimensions and position.
+        double left = 550;
+        double right = 650;
+
+        double top = 450;
+        double bottom = 550;
+
+        double front = 150;
+        double back = 250;
+
+        // Create the six cube faces.
+        TriangleMesh3D[] faces = {
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, front),
+                            new Point3D(left, top, back),
+                            new Point3D(left, bottom, back),
+                            new Point3D(left, bottom, front)),
+                    projection),
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(right, top, front),
+                            new Point3D(right, bottom, front),
+                            new Point3D(right, bottom, back),
+                            new Point3D(right, top, back)),
+                    projection),
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, front),
+                            new Point3D(right, top, front),
+                            new Point3D(right, top, back),
+                            new Point3D(left, top, back)),
+                    projection),
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, bottom, front),
+                            new Point3D(left, bottom, back),
+                            new Point3D(right, bottom, back),
+                            new Point3D(right, bottom, front)),
+                    projection),
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, front),
+                            new Point3D(left, bottom, front),
+                            new Point3D(right, bottom, front),
+                            new Point3D(right, top, front)),
+                    projection),
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, back),
+                            new Point3D(right, top, back),
+                            new Point3D(right, bottom, back),
+                            new Point3D(left, bottom, back)),
+                    projection)
+        };
+
+        // Draw every face using Gouraud shading.
+        for (TriangleMesh3D face : faces) {
+            // face.drawGouraud(buffer, rasterizer, light, material, lighting, viewDirection);
+            face.drawPhong(buffer, rasterizer, light, material, lighting, viewDirection);
+        }
+    }
+
+    private void testShadowMapping() {
+
+        clearCanvas();
+        depthBuffer.clear();
+
+        // Lighting configuration.
+        Light light = new Light(new Point3D(400, 320, 80), Color.WHITE, 1.0);
+
+        Material material = new Material(Color.BLUE, 0.3, 0.8, 0.5, 32.0);
+
+        PhongLighting lighting = new PhongLighting();
+
+        Point3D viewDirection = new Point3D(-0.7071, -0.7071, -1);
+
+        // Cube dimensions and position.
+        double left = 550;
+        double right = 650;
+
+        double top = 450;
+        double bottom = 550;
+
+        double front = 150;
+        double back = 250;
+
+        // Create the six cube faces.
+        TriangleMesh3D[] faces = {
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, front),
+                            new Point3D(left, top, back),
+                            new Point3D(left, bottom, back),
+                            new Point3D(left, bottom, front)),
+                    projection),
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(right, top, front),
+                            new Point3D(right, bottom, front),
+                            new Point3D(right, bottom, back),
+                            new Point3D(right, top, back)),
+                    projection),
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, front),
+                            new Point3D(right, top, front),
+                            new Point3D(right, top, back),
+                            new Point3D(left, top, back)),
+                    projection),
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, bottom, front),
+                            new Point3D(left, bottom, back),
+                            new Point3D(right, bottom, back),
+                            new Point3D(right, bottom, front)),
+                    projection),
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, front),
+                            new Point3D(left, bottom, front),
+                            new Point3D(right, bottom, front),
+                            new Point3D(right, top, front)),
+                    projection),
+            new TriangleMesh3D(
+                    createFace(
+                            new Point3D(left, top, back),
+                            new Point3D(right, top, back),
+                            new Point3D(right, bottom, back),
+                            new Point3D(left, bottom, back)),
+                    projection)
+        };
+
+        // Create a floor below the cube.
+        TriangleMesh3D floor =
+                new TriangleMesh3D(
+                        createFace(
+                                new Point3D(250, 550, 0),
+                                new Point3D(950, 550, 0),
+                                new Point3D(950, 550, 500),
+                                new Point3D(250, 550, 500)),
+                        projection);
+
+        // Floor material.
+        Material floorMaterial = new Material(Color.LIGHT_GRAY, 0.3, 0.8, 0.1, 16.0);
+
+        // Create the light projection.
+        Projection3D lightProjection = new ParallelProjection(0.5, 0.5, 1.0);
+
+        // Create the shadow map.
+        ShadowMap shadowMap = new ShadowMap(WIDTH, HEIGHT);
+
+        ShadowRenderer shadowRenderer = new ShadowRenderer(shadowMap, lightProjection);
+
+        // FIRST PASS: generate the shadow map.
+        shadowRenderer.clear();
+
+        for (TriangleMesh3D face : faces) {
+            face.renderShadowMap(shadowRenderer);
+        }
+
+        // Render floor.
+        floor.renderShadowMap(shadowRenderer);
+
+        // SECOND PASS: render from the camera's perspective.
+        depthBuffer.clear();
+
+        // 1. Draw the floor first.
+        floor.drawPhong(
+                buffer,
+                rasterizer,
+                light,
+                floorMaterial,
+                lighting,
+                viewDirection,
+                shadowMap,
+                lightProjection,
+                5.0);
+
+        // 2. Draw the six cube faces.
+        for (TriangleMesh3D face : faces) {
+            face.drawPhong(
+                    buffer,
+                    rasterizer,
+                    light,
+                    material,
+                    lighting,
+                    viewDirection,
+                    shadowMap,
+                    lightProjection,
+                    5.0);
+        }
     }
 }

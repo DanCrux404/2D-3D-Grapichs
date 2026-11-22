@@ -2,7 +2,13 @@ package engine.shapes;
 
 import engine.core.Point3D;
 import engine.core.ProjectedPoint;
+import engine.lighting.Light;
+import engine.lighting.Material;
+import engine.lighting.PhongLighting;
 import engine.raster.Rasterizer;
+import engine.shadow.ShadowMap;
+import engine.shadow.ShadowRenderer;
+import engine.transform.PerspectiveProjection;
 import engine.transform.Projection3D;
 import engine.transform.Transform3D;
 import engine.util.ColorUtils;
@@ -397,6 +403,526 @@ public class TriangleMesh3D implements SurfaceMesh {
                                 middleColor);
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Draws the mesh using Phong illumination and Z-buffering.
+     *
+     * @param buffer image where the mesh will be drawn
+     * @param rasterizer rasterizer responsible for depth testing
+     * @param light point light source
+     * @param material surface material
+     * @param lighting Phong illumination calculator
+     * @param viewDirection direction toward the viewer
+     */
+    public void draw(
+            BufferedImage buffer,
+            Rasterizer rasterizer,
+            Light light,
+            Material material,
+            PhongLighting lighting,
+            Point3D viewDirection) {
+
+        if (buffer == null
+                || rasterizer == null
+                || light == null
+                || material == null
+                || lighting == null
+                || viewDirection == null) {
+            throw new IllegalArgumentException("Rendering parameters cannot be null.");
+        }
+
+        Point3D[][] transformed = new Point3D[vertices.length][vertices[0].length];
+        ProjectedPoint[][] projected = new ProjectedPoint[vertices.length][vertices[0].length];
+
+        // Transform and project all mesh vertices.
+        for (int i = 0; i < vertices.length; i++) {
+            for (int j = 0; j < vertices[i].length; j++) {
+
+                transformed[i][j] = transformPoint(vertices[i][j]);
+
+                projected[i][j] = projection.projectWithDepth(transformed[i][j]);
+            }
+        }
+
+        // Calculate illumination and rasterize each cell.
+        for (int i = 0; i < vertices.length - 1; i++) {
+            for (int j = 0; j < vertices[i].length - 1; j++) {
+
+                Point3D p1 = transformed[i][j];
+                Point3D p2 = transformed[i][j + 1];
+                Point3D p3 = transformed[i + 1][j + 1];
+                Point3D p4 = transformed[i + 1][j];
+
+                ProjectedPoint pp1 = projected[i][j];
+                ProjectedPoint pp2 = projected[i][j + 1];
+                ProjectedPoint pp3 = projected[i + 1][j + 1];
+                ProjectedPoint pp4 = projected[i + 1][j];
+
+                drawLitTriangle(
+                        buffer,
+                        rasterizer,
+                        p1,
+                        p2,
+                        p3,
+                        pp1,
+                        pp2,
+                        pp3,
+                        light,
+                        material,
+                        lighting,
+                        viewDirection);
+
+                drawLitTriangle(
+                        buffer,
+                        rasterizer,
+                        p1,
+                        p3,
+                        p4,
+                        pp1,
+                        pp3,
+                        pp4,
+                        light,
+                        material,
+                        lighting,
+                        viewDirection);
+            }
+        }
+    }
+
+    /**
+     * Draws the mesh using Gouraud shading and Z-buffering.
+     *
+     * @param buffer destination image
+     * @param rasterizer depth-aware rasterizer
+     * @param light point light source
+     * @param material surface material
+     * @param lighting Phong illumination calculator
+     * @param viewDirection direction toward the viewer
+     */
+    public void drawGouraud(
+            BufferedImage buffer,
+            Rasterizer rasterizer,
+            Light light,
+            Material material,
+            PhongLighting lighting,
+            Point3D viewDirection) {
+
+        if (buffer == null
+                || rasterizer == null
+                || light == null
+                || material == null
+                || lighting == null
+                || viewDirection == null) {
+            throw new IllegalArgumentException("Rendering parameters cannot be null.");
+        }
+
+        int rows = vertices.length;
+        int columns = vertices[0].length;
+
+        Point3D[][] transformed = new Point3D[rows][columns];
+        ProjectedPoint[][] projected = new ProjectedPoint[rows][columns];
+
+        // Transform and project all vertices.
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                transformed[i][j] = transformPoint(vertices[i][j]);
+                projected[i][j] = projection.projectWithDepth(transformed[i][j]);
+            }
+        }
+
+        // Calculate the accumulated normals at every vertex.
+        double[][][] normalSums = new double[rows][columns][3];
+
+        for (int i = 0; i < rows - 1; i++) {
+            for (int j = 0; j < columns - 1; j++) {
+
+                Point3D p1 = transformed[i][j];
+                Point3D p2 = transformed[i][j + 1];
+                Point3D p3 = transformed[i + 1][j + 1];
+                Point3D p4 = transformed[i + 1][j];
+
+                // First triangle: p1, p2, p3.
+                Point3D normal1 = calculateNormal(p1, p2, p3);
+
+                if (normal1 != null) {
+                    accumulateNormal(normalSums, i, j, normal1);
+                    accumulateNormal(normalSums, i, j + 1, normal1);
+                    accumulateNormal(normalSums, i + 1, j + 1, normal1);
+                }
+
+                // Second triangle: p1, p3, p4.
+                Point3D normal2 = calculateNormal(p1, p3, p4);
+
+                if (normal2 != null) {
+                    accumulateNormal(normalSums, i, j, normal2);
+                    accumulateNormal(normalSums, i + 1, j + 1, normal2);
+                    accumulateNormal(normalSums, i + 1, j, normal2);
+                }
+            }
+        }
+
+        // Normalize the accumulated normals and calculate vertex colors.
+        Point3D[][] vertexNormals = new Point3D[rows][columns];
+        Color[][] vertexColors = new Color[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+
+                vertexNormals[i][j] = normalizeAccumulatedNormal(normalSums[i][j]);
+
+                if (vertexNormals[i][j] != null) {
+                    vertexColors[i][j] =
+                            lighting.calculateColor(
+                                    transformed[i][j],
+                                    vertexNormals[i][j],
+                                    viewDirection,
+                                    light,
+                                    material);
+                }
+            }
+        }
+
+        // Rasterize every cell using its interpolated vertex colors.
+        for (int i = 0; i < rows - 1; i++) {
+            for (int j = 0; j < columns - 1; j++) {
+
+                ProjectedPoint p1 = projected[i][j];
+                ProjectedPoint p2 = projected[i][j + 1];
+                ProjectedPoint p3 = projected[i + 1][j + 1];
+                ProjectedPoint p4 = projected[i + 1][j];
+
+                Color c1 = vertexColors[i][j];
+                Color c2 = vertexColors[i][j + 1];
+                Color c3 = vertexColors[i + 1][j + 1];
+                Color c4 = vertexColors[i + 1][j];
+
+                // First triangle: p1, p2, p3.
+                if (c1 != null && c2 != null && c3 != null) {
+                    rasterizer.fillTriangle(buffer, p1, p2, p3, c1, c2, c3);
+                }
+
+                // Second triangle: p1, p3, p4.
+                if (c1 != null && c3 != null && c4 != null) {
+                    rasterizer.fillTriangle(buffer, p1, p3, p4, c1, c3, c4);
+                }
+            }
+        }
+    }
+
+    /** Adds a triangle normal to the accumulated normal of a vertex. */
+    private void accumulateNormal(double[][][] normalSums, int row, int column, Point3D normal) {
+
+        normalSums[row][column][0] += normal.getX();
+        normalSums[row][column][1] += normal.getY();
+        normalSums[row][column][2] += normal.getZ();
+    }
+
+    /** Normalizes the accumulated normal of a vertex. */
+    private Point3D normalizeAccumulatedNormal(double[] normalSum) {
+
+        double nx = normalSum[0];
+        double ny = normalSum[1];
+        double nz = normalSum[2];
+
+        double magnitude = Math.sqrt(nx * nx + ny * ny + nz * nz);
+
+        if (magnitude < 1e-12) {
+            return null;
+        }
+
+        return new Point3D(nx / magnitude, ny / magnitude, nz / magnitude);
+    }
+
+    /** Calculates the flat illumination of a triangle and draws it. */
+    private void drawLitTriangle(
+            BufferedImage buffer,
+            Rasterizer rasterizer,
+            Point3D a,
+            Point3D b,
+            Point3D c,
+            ProjectedPoint pa,
+            ProjectedPoint pb,
+            ProjectedPoint pc,
+            Light light,
+            Material material,
+            PhongLighting lighting,
+            Point3D viewDirection) {
+
+        Point3D normal = calculateNormal(a, b, c);
+
+        // Ignore degenerate triangles.
+        if (normal == null) {
+            return;
+        }
+
+        Point3D center =
+                new Point3D(
+                        (a.getX() + b.getX() + c.getX()) / 3.0,
+                        (a.getY() + b.getY() + c.getY()) / 3.0,
+                        (a.getZ() + b.getZ() + c.getZ()) / 3.0);
+
+        Color illuminatedColor =
+                lighting.calculateColor(center, normal, viewDirection, light, material);
+
+        rasterizer.fillTriangle(buffer, pa, pb, pc, illuminatedColor);
+    }
+
+    /** Calculates the normalized normal vector of a triangle. */
+    private Point3D calculateNormal(Point3D a, Point3D b, Point3D c) {
+
+        double abX = b.getX() - a.getX();
+        double abY = b.getY() - a.getY();
+        double abZ = b.getZ() - a.getZ();
+
+        double acX = c.getX() - a.getX();
+        double acY = c.getY() - a.getY();
+        double acZ = c.getZ() - a.getZ();
+
+        double nx = abY * acZ - abZ * acY;
+        double ny = abZ * acX - abX * acZ;
+        double nz = abX * acY - abY * acX;
+
+        double magnitude = Math.sqrt(nx * nx + ny * ny + nz * nz);
+
+        if (magnitude < 1e-12) {
+            return null;
+        }
+
+        return new Point3D(nx / magnitude, ny / magnitude, nz / magnitude);
+    }
+
+    /**
+     * Draws the mesh using per-pixel Phong shading and Z-buffering.
+     *
+     * @param buffer destination image
+     * @param rasterizer depth-aware rasterizer
+     * @param light point light source
+     * @param material surface material
+     * @param lighting Phong illumination calculator
+     * @param viewDirection direction toward the viewer
+     */
+    public void drawPhong(
+            BufferedImage buffer,
+            Rasterizer rasterizer,
+            Light light,
+            Material material,
+            PhongLighting lighting,
+            Point3D viewDirection) {
+
+        drawPhong(buffer, rasterizer, light, material, lighting, viewDirection, null, null, 0.0);
+    }
+
+    /**
+     * Draws the mesh using per-pixel Phong shading, Z-buffering and shadow mapping.
+     *
+     * @param buffer destination image
+     * @param rasterizer depth-aware rasterizer
+     * @param light point light source
+     * @param material surface material
+     * @param lighting Phong illumination calculator
+     * @param viewDirection direction toward the viewer
+     * @param shadowMap shadow depth map
+     * @param lightProjection projection used by the light
+     * @param shadowBias depth bias to reduce shadow acne
+     */
+    public void drawPhong(
+            BufferedImage buffer,
+            Rasterizer rasterizer,
+            Light light,
+            Material material,
+            PhongLighting lighting,
+            Point3D viewDirection,
+            ShadowMap shadowMap,
+            Projection3D lightProjection,
+            double shadowBias) {
+
+        if (buffer == null
+                || rasterizer == null
+                || light == null
+                || material == null
+                || lighting == null
+                || viewDirection == null) {
+            throw new IllegalArgumentException("Rendering parameters cannot be null.");
+        }
+
+        if ((shadowMap == null) != (lightProjection == null)) {
+            throw new IllegalArgumentException(
+                    "Shadow map and light projection must be provided together.");
+        }
+
+        if (!Double.isFinite(shadowBias) || shadowBias < 0.0) {
+            throw new IllegalArgumentException("Shadow bias must be finite and non-negative.");
+        }
+
+        int rows = vertices.length;
+        int columns = vertices[0].length;
+
+        Point3D[][] transformed = new Point3D[rows][columns];
+        ProjectedPoint[][] projected = new ProjectedPoint[rows][columns];
+
+        // Transform and project all vertices.
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                transformed[i][j] = transformPoint(vertices[i][j]);
+                projected[i][j] = projection.projectWithDepth(transformed[i][j]);
+            }
+        }
+
+        // Accumulate triangle normals at every vertex.
+        double[][][] normalSums = new double[rows][columns][3];
+
+        for (int i = 0; i < rows - 1; i++) {
+            for (int j = 0; j < columns - 1; j++) {
+
+                Point3D p1 = transformed[i][j];
+                Point3D p2 = transformed[i][j + 1];
+                Point3D p3 = transformed[i + 1][j + 1];
+                Point3D p4 = transformed[i + 1][j];
+
+                Point3D normal1 = calculateNormal(p1, p2, p3);
+
+                if (normal1 != null) {
+                    accumulateNormal(normalSums, i, j, normal1);
+                    accumulateNormal(normalSums, i, j + 1, normal1);
+                    accumulateNormal(normalSums, i + 1, j + 1, normal1);
+                }
+
+                Point3D normal2 = calculateNormal(p1, p3, p4);
+
+                if (normal2 != null) {
+                    accumulateNormal(normalSums, i, j, normal2);
+                    accumulateNormal(normalSums, i + 1, j + 1, normal2);
+                    accumulateNormal(normalSums, i + 1, j, normal2);
+                }
+            }
+        }
+
+        // Normalize the accumulated vertex normals.
+        Point3D[][] vertexNormals = new Point3D[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                vertexNormals[i][j] = normalizeAccumulatedNormal(normalSums[i][j]);
+            }
+        }
+
+        // Perspective projection requires perspective-correct interpolation.
+        boolean perspectiveCorrect = projection instanceof PerspectiveProjection;
+
+        // Rasterize each cell as two triangles.
+        for (int i = 0; i < rows - 1; i++) {
+            for (int j = 0; j < columns - 1; j++) {
+
+                int nextRow = i + 1;
+                int nextColumn = j + 1;
+
+                Point3D p1 = transformed[i][j];
+                Point3D p2 = transformed[i][nextColumn];
+                Point3D p3 = transformed[nextRow][nextColumn];
+                Point3D p4 = transformed[nextRow][j];
+
+                Point3D n1 = vertexNormals[i][j];
+                Point3D n2 = vertexNormals[i][nextColumn];
+                Point3D n3 = vertexNormals[nextRow][nextColumn];
+                Point3D n4 = vertexNormals[nextRow][j];
+
+                ProjectedPoint pp1 = projected[i][j];
+                ProjectedPoint pp2 = projected[i][nextColumn];
+                ProjectedPoint pp3 = projected[nextRow][nextColumn];
+                ProjectedPoint pp4 = projected[nextRow][j];
+
+                // First triangle: p1, p2, p3.
+                if (n1 != null && n2 != null && n3 != null) {
+                    rasterizer.fillTrianglePhong(
+                            buffer,
+                            pp1,
+                            pp2,
+                            pp3,
+                            p1,
+                            p2,
+                            p3,
+                            n1,
+                            n2,
+                            n3,
+                            light,
+                            material,
+                            lighting,
+                            viewDirection,
+                            perspectiveCorrect,
+                            shadowMap,
+                            lightProjection,
+                            shadowBias);
+                }
+
+                // Second triangle: p1, p3, p4.
+                if (n1 != null && n3 != null && n4 != null) {
+                    rasterizer.fillTrianglePhong(
+                            buffer,
+                            pp1,
+                            pp3,
+                            pp4,
+                            p1,
+                            p3,
+                            p4,
+                            n1,
+                            n3,
+                            n4,
+                            light,
+                            material,
+                            lighting,
+                            viewDirection,
+                            perspectiveCorrect,
+                            shadowMap,
+                            lightProjection,
+                            shadowBias);
+                }
+            }
+        }
+    }
+
+    /**
+     * Renders the mesh from the light's point of view and stores its depth in the shadow map.
+     *
+     * <p>Each mesh cell is divided into two triangles, following the same diagonal used by the
+     * other rendering methods.
+     *
+     * @param shadowRenderer renderer responsible for generating the shadow map
+     */
+    public void renderShadowMap(ShadowRenderer shadowRenderer) {
+
+        if (shadowRenderer == null) {
+            throw new IllegalArgumentException("Shadow renderer cannot be null.");
+        }
+
+        int rows = vertices.length;
+        int columns = vertices[0].length;
+
+        // Transform all vertices using the mesh transformations.
+        Point3D[][] transformedVertices = new Point3D[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                transformedVertices[i][j] = transformPoint(vertices[i][j]);
+            }
+        }
+
+        // Render every cell as two triangles.
+        for (int i = 0; i < rows - 1; i++) {
+            for (int j = 0; j < columns - 1; j++) {
+
+                Point3D p1 = transformedVertices[i][j];
+                Point3D p2 = transformedVertices[i][j + 1];
+                Point3D p3 = transformedVertices[i + 1][j + 1];
+                Point3D p4 = transformedVertices[i + 1][j];
+
+                // First triangle.
+                shadowRenderer.renderTriangle(p1, p2, p3);
+
+                // Second triangle.
+                shadowRenderer.renderTriangle(p1, p3, p4);
             }
         }
     }
