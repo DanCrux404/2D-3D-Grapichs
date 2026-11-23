@@ -22,14 +22,6 @@ Inspect it to learn real construction, rendering, projection, lighting, shadows,
 ### Game/application code
 New game code belongs outside `engine/` and `TestFigures/`. Inspect `run.sh`, source layout, and compilation conventions before proposing the smallest suitable layout. Do not create packages blindly.
 
-Suggested responsibility boundaries, subject to approval:
-- app: startup, window, input wiring, lifecycle.
-- game: game state, rules, difficulty, progression.
-- world: rooms, corridors, doors, floors, walls, elevation, collision.
-- entities: player, enemies, projectiles, pickups.
-- rendering: adapters from game state to existing engine calls.
-- ui: menu, HUD, pause, game-over screens.
-
 ## Rendering rules
 - Use the existing engine for projection, transformations, geometry, rasterization, depth, lighting, and shadows.
 - Do not introduce a second renderer or duplicate drawing primitives.
@@ -48,19 +40,10 @@ Inspect `TestFigures/Canvas.java` and `run.sh` before implementing the game loop
 
 Do not claim double buffering is correct until verified. Avoid blocking the UI/event thread.
 
-## Camera and coordinates
-Document world axes, units, camera orientation, projection plane, and handedness before implementing movement/collision. Camera must support yaw and pitch; do not silently omit looking up/down.
+
 
 ## Threads
 First achieve a correct, stable single controlled update/render loop. Do not create one thread per pixel or tiny primitive. If threads per graphical element are pursued for extra credit, propose bounded ownership/synchronization of mutable state and buffers, then obtain approval. Never allow concurrent writes to the same image/depth buffer without an explicit design.
-
-## BitmapFont / TextRenderer
-
-A reusable utility that renders text using pixel glyphs and the existing pixel-writing API. It must not depend on Java2D text rendering.
-
-## AudioService
-
-An isolated audio component responsible for music playback. It should allow the game to run silently if no approved audio asset is available.
 
 ## Double Buffering
 
@@ -79,8 +62,6 @@ The implementation must be tested under continuous animation to verify stable, f
 ## Multithreading and Animation
 
 Multithreading is an important project requirement and should be used where it provides meaningful independent animation or update work.
-
-- Independent animated elements, such as enemies, doors, and environmental objects, may use separate execution threads when appropriate.
 - Avoid creating an uncontrolled number of threads.
 - Use a controlled concurrency strategy and document its design.
 - Synchronize access to shared game state and rendering resources.
@@ -91,16 +72,6 @@ Multithreading is an important project requirement and should be used where it p
 
 The implementation must demonstrate concurrent animation without compromising rendering stability or game responsiveness.
 
-## Audio System
-
-Audio playback must be optional and independent of the rendering pipeline.
-
-- Use a separate audio service or abstraction.
-- Do not block the game loop while loading or playing audio.
-- Keep audio playback disabled or silent when no legally approved soundtrack is available.
-- Do not add audio dependencies without approval.
-- Document the source and licensing terms of every included audio track.
-
 ## Thread Management and Concurrency
 
 ### ExecutorService Requirement
@@ -108,13 +79,6 @@ Audio playback must be optional and independent of the rendering pipeline.
 All application-managed background execution threads must be managed through Java's `ExecutorService` API.
 
 Creating and managing application threads directly using `new Thread()` is not permitted.
-
-### Game Loop Execution
-
-- The game loop must execute through an `ExecutorService`.
-- The initial implementation must use a single-thread executor.
-- The game loop is responsible for game-state updates and rendering.
-- The executor must be retained by the application so its lifecycle can be managed explicitly.
 
 ### Swing Event Dispatch Thread
 

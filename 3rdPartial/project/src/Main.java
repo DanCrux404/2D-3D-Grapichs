@@ -1,21 +1,12 @@
-import doom.app.GameApplication;
+import city.app.CityApplication;
 
 import javax.swing.SwingUtilities;
 
-/**
- * Entry point of the game application.
- *
- * <p>The existing launcher expects a class named {@code Main} in the default package, so this class
- * contains no logic other than starting {@link GameApplication} on Swing's Event Dispatch Thread.
- */
+/** Entry point for the 3D cozy city. */
 public class Main {
 
+    /** Launches the application on Swing's Event Dispatch Thread. */
     public static void main(String[] args) {
-
-        SwingUtilities.invokeLater(
-                () -> {
-                    GameApplication application = new GameApplication();
-                    application.show();
-                });
+        SwingUtilities.invokeLater(() -> new CityApplication().show());
     }
 }

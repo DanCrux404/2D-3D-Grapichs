@@ -1,97 +1,22 @@
-# Project Overview
+# Project Overview — 3D Cozy City
 
-## Goal
-Build an original retro first-person shooter inspired by classic 1990s corridor shooters. Working title: **Project DOOM**. It must be an animated 3D graphics demonstration covering the third-partial graphics coursework.
+## Concept
+A 3D interactive city animation inspired by our 2nd-partial 2D city project, featuring a cozy day/afternoon/night lighting cycle. The user explores a compact, clean 3D city from a first-person camera while animated elements (sun, moon, clouds, stars, and street/city details) run concurrently.
 
-This is an original student project. Do not copy proprietary DOOM assets, maps, source code, sounds, or other protected content. Create original geometry, level layouts, visuals, and gameplay content.
+## Core Goals
+1. **Complete 3rd-Partial Coverage:** Integrate every required 3D graphics topic using our custom `engine/` (no Java2D drawing calls except the existing pixel-writing path).
+2. **Smooth Presentation:** Verified flicker-free double buffering and stable frame pacing.
+3. **Controlled Concurrency:** Use `ExecutorService` to animate independent graphical elements safely without race conditions on the framebuffer.
+4. **Clean, Modular Scope:** Keep geometry lightweight (hollow rectangular-prism buildings on a flat street plane) so lighting, shadows, and animations run smoothly.
 
-## Coursework requirements
-- Parallel projection.
-- Perspective projection.
-- Translation, scaling, and rotation.
-- Curves, surfaces, and all other relevant third-partial topics.
-- Correct double buffering without visible flicker or avoidable delay.
-- No uncaught exceptions or runtime errors.
-- Use the project's own graphics methods. Do not use Java graphics drawing methods, except the existing pixel-writing mechanism.
-
-Additional credit may consider animation/graphic complexity and execution threads per graphical element. Threading is optional until correctness is established.
-
-Do not assume a topic is covered merely because an engine class exists. The finished application must visibly demonstrate each required topic.
-
-## Game concept
-A first-person shooter in a compact enclosed facility: corridors, rooms, doors, connected spaces, and elevation changes rather than a large open field.
-
-Intended features:
-- First-person movement.
-- Mouse or keyboard look, including looking up and down (camera pitch) as well as turning (yaw).
-- Doors that open.
-- Enemies that pursue/attack and damage the player.
-- Weapons, ammunition, health, and pickups.
-- Win/lose/restart flow.
-- Lighting and shadows using existing engine capabilities where practical.
-
-## Difficulty menu
-1. **I'm Too Young to Die** — relaxed play, slower/weaker enemies, more resources.
-2. **Hey, Not Too Rough** — easy introduction to the map and weapons.
-3. **Hurt Me Plenty** — balanced default.
-4. **Ultra-Violence** — tougher and more frequent enemies.
-5. **Nightmare** — extreme challenge, faster enemies, increased ammunition availability, and enemy respawning.
-
-Difficulty must be data-driven, not scattered hard-coded conditionals. Exact numerical tuning is a later decision.
-
-## Visual direction
-Retro and readable, with clear silhouettes, enclosed spaces, original geometry, a consistent palette, and steps/ramps/platforms or other elevation changes.
-
-## Priorities
-1. Correctness and coursework coverage.
-2. Stable rendering and frame pacing.
-3. Playable movement, collision, doors, and combat.
-4. Visual polish and animation.
-5. Optional optimization/threading after correctness.
-
-## Menu and game-state flow
-- The title screen must contain two options: PLAY and EXIT.
-- Selecting PLAY opens the difficulty selection screen.
-- Selecting a difficulty starts the game.
-- When the player dies, return to the title screen.
-- EXIT closes the application cleanly.
-- All menu text must be rendered using a custom bitmap/pixel font.
-- The font must use the existing pixel-writing mechanism.
-- Do not use Java2D text rendering or Graphics.drawString().
-
-## Combat presentation
-- Ordinary weapon fire must use hitscan-style logic.
-- Do not render visible bullets, bullet meshes, or traveling bullet streaks.
-- Preserve the classic retro FPS presentation.
-- Muzzle flashes and brief weapon effects may be considered separately.
-
-## Music and audio
-- The preferred soundtrack is the original music associated with the first DOOM episode.
-- The exact track's license and permissions must be verified before including it.
-- Do not redistribute or commit copyrighted music without permission.
-- Audio must be optional, so the game can run without music.
-- I can download the original music and be can play it when game start on loop
-- Remember this in orden for me to download it and save it on a specific folder
-
-## Definition of done
-All coursework topics are demonstrably used; the game loop is playable from menu through win/lose/restart; rendering uses the existing engine without prohibited Java drawing APIs; double buffering is verified; and the project runs reliably using its documented launcher.
-
-## Menu and Game Flow
-
-The game must include the following navigation flow:
-
-1. The title screen displays PLAY and EXIT.
-2. Selecting PLAY opens the difficulty selection screen.
-3. Selecting a difficulty starts the game.
-4. When the player dies, the game returns to the title screen.
-5. Selecting EXIT closes the application.
-
-All menu text must be rendered using a reusable bitmap font and pixel operations.
-
-## Weapon System
-
-Weapon attacks must use hitscan mechanics.
-
-- Attacks are evaluated using raycasting or an equivalent instantaneous hit-detection method.
-- No visible traveling bullets, bullet trails, or projectile meshes are required.
-- Weapon feedback may use brief visual effects, but must not depict physical bullets traveling through the environment.
+## Visual & Scene Elements
+- **Ground & Streets:** Flat city plane with roads, intersections, and sidewalks.
+- **Buildings:** Hollow rectangular prisms with varied heights, scales, and cozy color palettes (materials reacting to light).
+- **Sky & Day/Night Cycle:** Smooth color transitions (morning, afternoon, sunset, night) driving directional/point light position, intensity, and color.
+- **Celestial & Atmospheric Elements:**
+  - **Sun & Moon:** Moving along a 3D parametric/explicit curve orbit, acting as the primary light source.
+  - **Clouds:** 3D parametric/explicit surfaces drifting across the sky.
+  - **Stars:** Subtle 3D points/shapes visible during the night phase.
+- **Camera & Projections:**
+  - **Perspective mode (default):** First-person camera with WASD movement and yaw/pitch look.
+  - **Parallel mode (toggleable):** Orthographic/parallel projection view (e.g., architectural/overview camera) to satisfy both projection requirements cleanly.

@@ -57,35 +57,6 @@ Never mark work complete unless implemented and tested.
 ## Approval gates
 Ask before editing protected/infrastructure files, adding dependencies/assets, changing public engine APIs, making major architecture decisions, or introducing concurrency/shared-buffer writes. Human leads have final authority.
 
-## Additional Mandatory Requirements
-
-### Menu Rendering
-- Implement a reusable bitmap font.
-- Render all menu lettering using the existing pixel-writing mechanism.
-- Never use Java2D text rendering or `Graphics.drawString()`.
-- Do not create a separate graphics renderer for text.
-
-### Menu Navigation
-The required navigation flow is:
-
-1. Title screen: PLAY and EXIT.
-2. PLAY opens the difficulty selection screen.
-3. Selecting a difficulty starts gameplay.
-4. Player death returns to the title screen.
-5. EXIT closes the application cleanly.
-
-### Combat
-- Use hitscan logic for ordinary weapon fire.
-- Do not render visible traveling bullets or bullet meshes.
-- Do not introduce projectile visuals unless explicitly approved.
-
-### Audio
-- The original DOOM soundtrack is a desired reference, not automatic permission to use copyrighted material.
-- Verify the exact track's licensing and permitted use before including it.
-- Do not download, commit, or redistribute unlicensed music.
-- Keep audio optional and isolated behind an audio service.
-- Do not introduce audio dependencies without approval.
-
 ## Rendering and Concurrency Requirements
 
 The following requirements are mandatory:
@@ -96,9 +67,8 @@ The following requirements are mandatory:
 4. Thread creation must be controlled; do not create threads indiscriminately.
 5. Shared game state and rendering resources must be accessed safely.
 6. Never allow multiple threads to modify the same rendering buffer without an explicit synchronization strategy.
-7. Do not introduce Java2D drawing methods for game geometry or menu text.
-8. Menu text must use a reusable bitmap font rendered through pixel operations.
-9. Weapon attacks must use hitscan logic. Do not create visible traveling bullet or projectile objects.
+7. Do not introduce Java2D drawing methods for scene geometry.
+8. The application launches straight into the 3D cozy city; no title, menu, or difficulty screens.
 
 Before implementing multithreading or double buffering, inspect the existing engine and TestFigures code. Reuse existing mechanisms whenever possible.
 

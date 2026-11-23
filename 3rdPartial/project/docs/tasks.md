@@ -1,125 +1,38 @@
-# Task Tracker
+# Tasks
 
-Legend: `[ ]` not started · `[~]` in progress · `[x]` completed and validated · `[!]` blocked / needs human decision.
+Status legend: `[ ]` Pending | `[~]` In Progress | `[x]` Completed & Verified
 
-## Phase 0 — Repository Reconnaissance and Planning
+## Phase 0 — Reconnaissance
+- [x] **T-001:** Inspect `/home/dante/Documents_Storage/GitHub/2D, 3D Grapichs/2ndPartial/project` (structure, `CityScene`, `DayNightCycle`, `AnimationController`, `elements/`).
+- [x] **T-002:** Scan `engine/` public classes, constructors, and methods; update `engine-inventory.md`.
+- [x] **T-003:** Inspect `TestFigures/` to document exact usage of projections, `Rasterizer`, `DepthBuffer`, `PhongLighting`, `ShadowRenderer`, and canvas presentation.
+- [x] **T-004:** Run existing `TestFigures` via `run.sh` to confirm build/run environment works.
+- [x] **T-005:** Propose new 3D city package layout and wait for human lead approval.
 
-- [ ] Inspect and summarize repository tree.
-- [ ] Inspect `run.sh`, `README.md`, and build conventions.
-- [ ] Inventory engine packages, public classes, and relevant methods.
-- [ ] Inspect `TestFigures/` usage examples.
-- [ ] Verify build and launch command.
-- [ ] Document buffer lifecycle, pixel path, projections, transforms, depth, lighting, and shadows.
-- [ ] Inspect existing double-buffering and frame-presentation mechanisms.
-- [ ] Inspect existing animation loops and threading mechanisms, if any.
-- [ ] Identify unknowns, technical constraints, and potential risks.
-- [ ] Propose game source layout for approval.
-- [ ] Verify soundtrack source, licensing terms, and permitted uses.
-- [ ] Document whether the desired soundtrack can legally be included and redistributed.
-- [ ] Obtain human approval before implementation.
+## Phase 1 — Core Loop & Camera
+- [x] **T-010:** Implement double-buffered canvas and `ExecutorService`-managed game loop.
+- [x] **T-011:** Implement first-person camera (WASD + yaw/pitch) and near-plane clipping.
+- [x] **T-012:** Implement runtime toggle between Perspective and Parallel projection.
 
-## Phase 1 — Application Skeleton and User Interface
+## Phase 1.5 — Refinements (approved)
+- [x] **T-015:** Move the near plane to the engine COP (`z = -focal + 1`) so ground under the camera fills the bottom of the frame; extend ground with a coarse far skirt and clamp movement to the detailed area.
+- [x] **T-016:** Make the Swing panel focusable and request focus on show/click; bind movement keys in `WHEN_FOCUSED` so arrow keys work without ancestor-map interception.
+- [x] **T-017:** Scale the prism to a skyline-scale building and add reusable window quads with mutable day/night color.
+- [x] **T-018:** Verify via headless pixel probes, synthetic Swing key events, and concurrency stress; update docs.
 
-- [x] Create a separate application entry point.
-- [x] Establish repeatable build and launch commands.
-- [ ] Establish the application and game-state structure.
-- [x] Create the retro title menu.
-- [x] Implement a reusable bitmap font.
-- [x] Render menu text using pixel operations.
-- [x] Implement PLAY and EXIT options.
-- [x] Implement difficulty selection.
-- [x] Implement title-to-difficulty-to-gameplay navigation.
-- [ ] Implement a controlled update and render loop.
-- [ ] Implement double buffering using the approved rendering strategy.
-- [ ] Verify back-buffer lifecycle and frame presentation.
-- [ ] Verify stable presentation without flicker or partially rendered frames.
-- [ ] Design an optional audio service independent of the rendering loop.
-- [ ] Implement optional audio playback if an approved audio track is available.
+## Phase 2 — City Geometry
+- [x] **T-020:** Create flat ground plane and street layout.
+- [x] **T-021:** Create `Building` geometry (hollow prisms) with `Transform3D` placement.
+- [x] **T-022:** Add 3D curve and surface elements to the scene.
+- [x] **T-023:** Verify Phase 2 via pixel/geometry probes, input probe, concurrency stress, benchmark, and docs.
 
-## Phase 2 — World and First-Person Camera
+## Phase 3 — Lighting, Day/Night & Shadows
+- [x] **T-030:** Port `DayNightCycle` color/time progression to 3D.
+- [x] **T-031:** Integrate `Light`, `Material`, and `PhongLighting`.
+- [x] **T-032:** Integrate `ShadowMap` and `ShadowRenderer`.
 
-- [ ] Document world axes, units, and camera conventions.
-- [ ] Create a test room with floor, ceiling, and walls.
-- [ ] Implement first-person movement.
-- [ ] Implement yaw and pitch (looking left, right, up, and down).
-- [ ] Implement collision detection.
-- [ ] Add elevation changes.
-- [ ] Demonstrate perspective projection.
-- [ ] Demonstrate parallel projection where appropriate.
-- [ ] Verify camera behavior and projection near walls and corners.
+## Phase 4 — Multithreaded Animations
+- [x] **T-040:** Add concurrent animated `Cloud`, `Sun`, `Moon`, and `Star` elements using a bounded `ThreadPoolExecutor` with immutable `AnimationSnapshot` records; recenter the parallel overview on `scene.center()`, raise spawn eye height to 95, allow upward pitch to +18°, add 15 block-aligned buildings, parametric mountains/clouds, visible sun/moon, twinkling stars, and a scene-centered 512×512 shadow pass.
 
-## Phase 3 — Doors and Level Design
-
-- [ ] Create connected rooms and corridors.
-- [ ] Implement interactive doors.
-- [ ] Animate door opening and closing.
-- [ ] Implement interaction detection.
-- [ ] Implement level progression.
-- [ ] Create the initial playable level layout.
-
-## Phase 4 — Combat, Enemies, and Game Flow
-
-- [ ] Implement player health and damage.
-- [ ] Implement weapons, firing, and ammunition.
-- [ ] Implement hitscan weapon firing using raycasting or equivalent instantaneous hit detection.
-- [ ] Verify that weapons do not render visible traveling bullets or projectile meshes.
-- [ ] Implement enemy movement, attacks, damage, and death.
-- [ ] Implement enemy-player hit detection.
-- [ ] Implement pickups and resources.
-- [ ] Implement five data-driven difficulty settings.
-- [ ] Configure enemy behavior and resource availability for each difficulty.
-- [ ] Implement player death detection.
-- [ ] Implement death-to-title navigation.
-- [ ] Implement win, pause, and restart flows.
-
-## Phase 5 — Lighting and Shadows
-
-- [ ] Integrate the engine lighting system.
-- [ ] Add environmental light sources.
-- [ ] Integrate shadow mapping.
-- [ ] Verify shadows on floors and walls.
-- [ ] Add weapon muzzle-flash effects.
-- [ ] Verify lighting and shadows during gameplay.
-
-## Phase 6 — Animation and Coursework Coverage
-
-- [ ] Animate enemies and doors.
-- [ ] Animate pickups and environmental elements.
-- [ ] Demonstrate translation.
-- [ ] Demonstrate scaling.
-- [ ] Demonstrate rotation.
-- [ ] Demonstrate curves.
-- [ ] Demonstrate surfaces.
-- [ ] Audit all third-partial topics against the coursework rubric.
-- [ ] Identify independent animated elements suitable for concurrent updates.
-- [ ] Implement controlled multithreading where appropriate.
-- [ ] Synchronize access to shared game state and rendering resources.
-- [ ] Verify that concurrent updates do not cause race conditions or rendering artifacts.
-- [ ] Verify stable double-buffered presentation during concurrent animation.
-- [ ] Measure performance and avoid unnecessary thread creation.
-
-## Phase 7 — Validation and Delivery
-
-- [ ] Clean build succeeds.
-- [ ] Launcher works from the documented directory.
-- [ ] No uncaught exceptions during normal gameplay.
-- [ ] Double buffering verified without visible flicker.
-- [ ] Continuous animation verified under normal gameplay conditions.
-- [ ] All difficulty levels tested.
-- [ ] Menu navigation and game-state transitions tested.
-- [ ] Hitscan combat tested.
-- [ ] Player death and return-to-title flow tested.
-- [ ] Audio behavior tested when enabled and disabled.
-- [ ] Thread synchronization and shutdown tested.
-- [ ] Coursework coverage matrix completed.
-- [ ] Controls and architecture documented.
-- [ ] Final evidence captured.
-- [ ] Human leads approve delivery.
-
-## Current Status## Current Status
-
-**Current phase:** Phase 1 — Menu System Implementation.
-
-**Game implementation:** Menu system implemented and verified. Title screen with PLAY/EXIT options and difficulty selection screen with five exact difficulty names in order (I'M TOO YOUNG TO DIE, HEY, NOT TOO ROUGH, HURT ME PLENTY, ULTRA-VIOLENCE, NIGHTMARE). HURT ME PLENTY is default difficulty. All menu text rendered via BitmapFont.renderString() using Pixel.put(). Existing GameLoop state ownership, InputState key bindings, ExecutorService, double-buffering architecture preserved unchanged.
-
-**Next phase:** Phase 2 — World and First-Person Camera.
+## Phase 5 — Final Verification & Polish
+- [x] **T-050:** Full rubric audit (`rubric-checklist.md`), visual polish pass, stability test, and clean shutdown check — verified by `Phase2Probe`, `Phase3Probe`, `Phase4Probe`, `PolishProbe`, `InputProbe`, `Bench`, `ConcurrencyProbe`, and `./run.sh project`.
